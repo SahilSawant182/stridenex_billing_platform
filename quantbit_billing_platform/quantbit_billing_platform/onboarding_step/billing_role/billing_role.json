@@ -1,0 +1,20 @@
+{
+ "action": "Create Entry",
+ "creation": "2026-03-19 12:59:37.151920",
+ "description": "Create the billing roles first.\n\nThere will be the one Master Role that will be assigned to master user and under that one master role there will be sevral base roles(this base roles are the roles that master user will assign to the base user)",
+ "docstatus": 0,
+ "doctype": "Onboarding Step",
+ "idx": 0,
+ "is_complete": 0,
+ "is_single": 0,
+ "is_skipped": 0,
+ "modified": "2026-03-19 14:40:29.609681",
+ "modified_by": "Administrator",
+ "name": "Billing Role",
+ "owner": "Administrator",
+ "reference_document": "Billing Role",
+ "show_form_tour": 0,
+ "show_full_form": 0,
+ "title": "Create Billing Role",
+ "validate_action": 1
+}

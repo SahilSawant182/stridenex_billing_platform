@@ -1,0 +1,1976 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quantbit | Register Account</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --ink:        #050814;
+      --ink-2:      #0d1226;
+      --ink-3:      #111827;
+      --fog:        #8892a4;
+      --mist:       #c8cfe0;
+      --white:      #ffffff;
+      --blue:       #3b6fff;
+      --blue-bright:#5b8fff;
+      --blue-glow:  rgba(59,111,255,0.35);
+      --cyan:       #00d4ff;
+      --violet:     #7c3aed;
+      --emerald:    #10d98a;
+      --amber:      #f59e0b;
+      --error:      #ef4444;
+      --border:     rgba(59,111,255,0.15);
+      --font-display:'DM Sans', sans-serif;
+      --font-body:   'DM Sans', sans-serif;
+      --font-label:  'DM Sans', sans-serif;
+      --ease-bounce: cubic-bezier(0.34,1.56,0.64,1);
+      --ease-smooth: cubic-bezier(0.4,0,0.2,1);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--ink);
+      color: var(--white);
+      overflow-x: hidden;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 0; opacity: 0.6;
+    }
+
+    .orb-1 {
+      position: fixed; top: -120px; right: -80px;
+      width: 600px; height: 600px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(59,111,255,0.12) 0%, transparent 70%);
+      filter: blur(80px); pointer-events: none; z-index: 0;
+      animation: driftA 14s ease-in-out infinite;
+    }
+    .orb-2 {
+      position: fixed; bottom: -80px; left: -60px;
+      width: 450px; height: 450px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,212,255,0.08) 0%, transparent 70%);
+      filter: blur(70px); pointer-events: none; z-index: 0;
+      animation: driftB 16s ease-in-out infinite;
+    }
+    @keyframes driftA { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-30px,30px)} }
+    @keyframes driftB { 0%,100%{transform:translate(0,0)} 50%{transform:translate(20px,-25px)} }
+
+    .cursor-dot {
+      width: 8px; height: 8px; background: var(--blue); border-radius: 50%;
+      position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9999;
+      transform: translate(-50%,-50%); transition: background 0.2s;
+    }
+    .cursor-ring {
+      width: 36px; height: 36px;
+      border: 1.5px solid rgba(59,111,255,0.5); border-radius: 50%;
+      position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9998;
+      transform: translate(-50%,-50%);
+      transition: width 0.3s, height 0.3s;
+    }
+
+    /* ── NAVBAR ── */
+    .navbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 1.2rem 5%;
+      background: rgba(5,8,20,0.6);
+      backdrop-filter: blur(24px);
+      border-bottom: 1px solid rgba(59,111,255,0.1);
+      transition: all 0.4s var(--ease-smooth);
+    }
+    .navbar.scrolled {
+      background: rgba(5,8,20,0.92);
+      border-color: rgba(59,111,255,0.2);
+      box-shadow: 0 8px 48px rgba(0,0,0,0.4);
+    }
+    .logo {
+      display: flex; align-items: center; gap: 0.9rem;
+      text-decoration: none;
+    }
+    .logo-mark {
+      width: 42px; height: 42px;
+      background: linear-gradient(135deg, var(--blue), var(--cyan));
+      border-radius: 10px; display: grid; place-items: center;
+      font-family: var(--font-display); font-weight: 700; font-size: 1.4rem;
+      color: white; font-style: italic;
+      box-shadow: 0 0 20px var(--blue-glow);
+      position: relative; overflow: hidden;
+    }
+    .logo-mark::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.25), transparent);
+    }
+    .logo-name {
+      font-family: var(--font-display); font-weight: 600; font-size: 1.35rem;
+      color: white; letter-spacing: 0.04em;
+    }
+    .logo-name span { color: var(--cyan); }
+    nav { display: flex; align-items: center; gap: 1rem; }
+    .btn-nav-login {
+      padding: 0.6rem 1.3rem; background: transparent;
+      color: var(--mist); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px;
+      font-family: var(--font-label); font-size: 0.8rem; font-weight: 400;
+      cursor: pointer; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 0.4rem; transition: all 0.3s;
+    }
+    .btn-nav-login:hover {
+      background: rgba(255,255,255,0.06);
+      border-color: rgba(255,255,255,0.3); color: white;
+    }
+
+    /* ── APPS BAR ── */
+    .apps-bar {
+      position: fixed; top: 72px; left: 0; right: 0; z-index: 999;
+      background: rgba(5,8,20,0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(59,111,255,0.08);
+      padding: 0.8rem 5%;
+    }
+    .apps-bar-inner {
+      display: flex; gap: 1rem; overflow-x: auto;
+      max-width: 1400px; margin: 0 auto;
+      scrollbar-width: none; padding-bottom: 2px;
+    }
+    .apps-bar-inner::-webkit-scrollbar { display: none; }
+    .pill {
+      padding: 0.45rem 1.2rem;
+      background: rgba(59,111,255,0.08);
+      border: 1px solid rgba(59,111,255,0.15);
+      color: var(--mist); border-radius: 100px;
+      font-size: 0.8rem; font-family: var(--font-label);
+      white-space: nowrap; display: inline-flex; align-items: center; gap: 0.5rem;
+      transition: all 0.3s;
+    }
+
+    /* ── MAIN CONTENT ── */
+    .main-content {
+      position: relative; z-index: 1;
+      margin-top: 160px;
+      padding: 3rem 5% 6rem;
+      max-width: 1100px; margin-left: auto; margin-right: auto;
+    }
+
+    /* ── PAGE HEADER ── */
+    .page-header {
+      text-align: center; margin-bottom: 3rem;
+      animation: fadeInDown 0.7s var(--ease-bounce) both;
+    }
+    .page-eyebrow {
+      display: inline-flex; align-items: center; gap: 0.6rem;
+      background: rgba(59,111,255,0.1);
+      border: 1px solid rgba(59,111,255,0.25);
+      padding: 0.4rem 1rem; border-radius: 100px;
+      font-size: 0.72rem; font-weight: 700;
+      font-family: var(--font-label);
+      color: var(--cyan); letter-spacing: 0.12em;
+      text-transform: uppercase; margin-bottom: 1.2rem;
+    }
+    .eyebrow-dot {
+      width: 6px; height: 6px; background: var(--cyan);
+      border-radius: 50%; animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.8)} }
+    .page-title {
+      font-family: var(--font-display);
+      font-size: clamp(2.2rem, 4vw, 3.5rem);
+      font-weight: 700; line-height: 1.08; color: white;
+      letter-spacing: -0.01em; margin-bottom: 0.7rem;
+    }
+    .page-title .g {
+      background: linear-gradient(90deg, var(--blue), var(--cyan));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .page-sub {
+      font-size: 1.05rem; font-family: var(--font-body);
+      color: var(--fog); line-height: 1.7;
+    }
+
+    /* ── STEPPER ── */
+    .steps-container {
+      display: flex; justify-content: space-between;
+      margin-bottom: 2.5rem; position: relative;
+      animation: fadeInUp 0.6s var(--ease-bounce) 0.15s both;
+    }
+    .steps-container::before {
+      content: ''; position: absolute;
+      top: 20px; left: 0; right: 0; height: 1px;
+      background: rgba(59,111,255,0.2); z-index: 1;
+    }
+    .step-item {
+      position: relative; z-index: 2;
+      display: flex; flex-direction: column; align-items: center; gap: 10px;
+    }
+    .step-circle {
+      width: 40px; height: 40px;
+      background: rgba(13,18,38,0.9);
+      border: 1px solid rgba(59,111,255,0.2);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-label); font-weight: 700; font-size: 0.85rem;
+      color: var(--fog); transition: all 0.4s var(--ease-bounce);
+    }
+    .step-item.active .step-circle {
+      border-color: var(--blue);
+      background: var(--blue); color: white;
+      box-shadow: 0 0 20px var(--blue-glow);
+    }
+    .step-item.completed .step-circle {
+      border-color: var(--emerald);
+      background: rgba(16,217,138,0.15); color: var(--emerald);
+      box-shadow: 0 0 16px rgba(16,217,138,0.2);
+    }
+    .step-label {
+      font-size: 0.68rem; font-weight: 700;
+      font-family: var(--font-label);
+      color: var(--fog); text-transform: uppercase; letter-spacing: 0.1em;
+    }
+    .step-item.active .step-label { color: var(--blue-bright); }
+    .step-item.completed .step-label { color: var(--emerald); }
+
+    /* ── FORM CARD ── */
+    .registration-wrapper {
+      background: rgba(13,18,38,0.9);
+      border: 1px solid rgba(59,111,255,0.15);
+      border-radius: 24px;
+      padding: 3.5rem 4rem;
+      position: relative; overflow: hidden;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(59,111,255,0.08);
+      animation: fadeInUp 0.7s var(--ease-bounce) 0.25s both;
+    }
+    .registration-wrapper::before {
+      content: ''; position: absolute;
+      top: 0; left: 20%; right: 20%; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--blue), transparent);
+    }
+
+    .form-step { display: none; animation: slideIn 0.35s var(--ease-smooth); }
+    .form-step.active { display: block; }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .step-heading {
+      font-family: var(--font-display);
+      font-size: 1.9rem; font-weight: 700;
+      color: white; margin-bottom: 0.4rem;
+      letter-spacing: -0.01em;
+    }
+    .step-sub {
+      font-size: 0.98rem; font-family: var(--font-body);
+      color: var(--fog); margin-bottom: 2rem; line-height: 1.6;
+    }
+
+    /* ── FORM GRID ── */
+    .grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.6rem;
+    }
+    .full-width { grid-column: span 2; }
+
+    .field { display: flex; flex-direction: column; gap: 7px; }
+    .field label {
+      font-size: 0.72rem; font-weight: 700;
+      font-family: var(--font-label);
+      color: var(--mist); text-transform: uppercase; letter-spacing: 0.09em;
+    }
+    .field input,
+    .field select {
+      height: 50px; padding: 0 16px;
+      background: rgba(5,8,20,0.6);
+      border: 1px solid rgba(59,111,255,0.18);
+      border-radius: 10px;
+      font-family: var(--font-body); font-size: 1rem;
+      color: white;
+      transition: all 0.25s var(--ease-smooth);
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .field input::placeholder { color: var(--fog); }
+    .field select option { background: var(--ink-2); color: white; }
+    .field input:focus,
+    .field select:focus {
+      outline: none;
+      border-color: var(--blue);
+      background: rgba(13,18,38,0.95);
+      box-shadow: 0 0 0 3px rgba(59,111,255,0.15);
+    }
+    .field input.error,
+    .field select.error {
+      border-color: var(--error);
+      box-shadow: 0 0 0 3px rgba(239,68,68,0.12);
+    }
+    .field input.valid {
+      border-color: var(--emerald);
+      box-shadow: 0 0 0 3px rgba(16,217,138,0.1);
+    }
+
+    /* ── BUTTONS ── */
+    .button-group {
+      margin-top: 2.5rem; display: flex;
+      justify-content: space-between; gap: 1rem;
+    }
+    .btn {
+      padding: 0.9rem 2rem; border-radius: 10px;
+      font-family: var(--font-label); font-weight: 700;
+      font-size: 0.82rem; letter-spacing: 0.05em;
+      cursor: pointer; transition: all 0.3s var(--ease-bounce);
+      border: none; display: inline-flex; align-items: center;
+      justify-content: center; gap: 0.5rem;
+    }
+    .btn-next {
+      background: linear-gradient(135deg, var(--blue), #2252e8);
+      color: white; flex: 2;
+      box-shadow: 0 8px 28px rgba(59,111,255,0.3);
+      position: relative; overflow: hidden;
+    }
+    .btn-next::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+    }
+    .btn-next:hover { transform: translateY(-3px); box-shadow: 0 16px 44px rgba(59,111,255,0.5); }
+    .btn-prev {
+      background: rgba(255,255,255,0.05);
+      color: var(--mist); flex: 1;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .btn-prev:hover {
+      background: rgba(255,255,255,0.09);
+      border-color: rgba(255,255,255,0.2); color: white;
+    }
+
+    /* ── APP PICKER ── */
+    .app-picker {
+      background: rgba(5,8,20,0.5);
+      border: 1px dashed rgba(59,111,255,0.2);
+      border-radius: 14px; padding: 1.2rem; margin-bottom: 1.4rem;
+    }
+    .add-app-row { display: flex; gap: 0.8rem; }
+    .app-picker select {
+      flex: 1; height: 50px;
+      background: rgba(5,8,20,0.6);
+      border: 1px solid rgba(59,111,255,0.18);
+      border-radius: 10px; padding: 0 16px;
+      font-family: var(--font-body); font-size: 1rem; color: white;
+      -webkit-appearance: none;
+      appearance: none;
+      transition: all 0.25s;
+    }
+    .app-picker select:focus {
+      outline: none; border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(59,111,255,0.15);
+    }
+    .app-picker select option { background: var(--ink-2); }
+    .btn-add-app {
+      padding: 0 1.6rem; height: 50px;
+      background: linear-gradient(135deg, var(--blue), #2252e8);
+      color: white; border: none; border-radius: 10px;
+      font-family: var(--font-label); font-size: 0.82rem; font-weight: 700;
+      cursor: pointer; letter-spacing: 0.04em;
+      transition: all 0.3s var(--ease-bounce);
+      box-shadow: 0 4px 16px rgba(59,111,255,0.25);
+      white-space: nowrap;
+    }
+    .btn-add-app:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(59,111,255,0.4); }
+
+    .app-table { width: 100%; border-collapse: collapse; }
+    .app-table tr {
+      border-bottom: 1px solid rgba(59,111,255,0.08);
+      transition: background 0.2s;
+    }
+    .app-table tr:hover { background: rgba(59,111,255,0.04); }
+    .app-table tr:last-child { border-bottom: none; }
+    .app-table td {
+      padding: 0.85rem 0.5rem;
+      font-family: var(--font-body); font-size: 0.98rem;
+      color: var(--mist);
+    }
+    .app-name-cell {
+      display: flex; align-items: center; gap: 0.7rem;
+    }
+    .app-icon-badge {
+      width: 28px; height: 28px; border-radius: 7px;
+      background: rgba(59,111,255,0.15);
+      border: 1px solid rgba(59,111,255,0.25);
+      display: grid; place-items: center;
+      color: var(--blue-bright); font-size: 0.75rem;
+    }
+    .btn-remove {
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.2);
+      color: var(--error); border-radius: 7px;
+      padding: 0.3rem 0.8rem;
+      font-family: var(--font-label); font-size: 0.72rem; font-weight: 700;
+      cursor: pointer; transition: all 0.2s; letter-spacing: 0.04em;
+    }
+    .btn-remove:hover {
+      background: rgba(239,68,68,0.18);
+      border-color: rgba(239,68,68,0.5); color: #ff6b6b;
+    }
+
+    .field-divider {
+      height: 1px; background: rgba(59,111,255,0.1);
+      margin: 1.5rem 0; grid-column: span 2;
+    }
+
+    .select-wrap { position: relative; }
+    .select-wrap::after {
+      content: '\f078';
+      font-family: 'Font Awesome 6 Free'; font-weight: 900;
+      font-size: 0.65rem; color: var(--fog);
+      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+      pointer-events: none;
+    }
+    .select-wrap select { width: 100%; }
+
+    @media (max-width: 650px) {
+      .grid { grid-template-columns: 1fr; }
+      .full-width { grid-column: span 1; }
+      .field-divider { grid-column: span 1; }
+      .registration-wrapper { padding: 2rem 1.4rem; }
+    }
+
+    /* ── SUCCESS OVERLAY ── */
+    .success-overlay {
+      position: fixed; inset: 0; z-index: 9000;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(5,8,20,0.85);
+      backdrop-filter: blur(16px);
+      opacity: 0; visibility: hidden;
+      transition: all 0.4s var(--ease-smooth);
+    }
+    .success-overlay.show { opacity: 1; visibility: visible; }
+
+    .success-card {
+      background: rgba(13,18,38,0.98);
+      border: 1px solid rgba(16,217,138,0.25);
+      border-radius: 28px;
+      padding: 3.5rem 3rem;
+      max-width: 480px; width: 90%;
+      text-align: center;
+      position: relative; overflow: hidden;
+      box-shadow: 0 40px 100px rgba(0,0,0,0.6), 0 0 60px rgba(16,217,138,0.08);
+      transform: scale(0.88) translateY(24px);
+      transition: transform 0.5s var(--ease-bounce);
+    }
+    .success-overlay.show .success-card { transform: scale(1) translateY(0); }
+    .success-card::before {
+      content: '';
+      position: absolute; top: 0; left: 15%; right: 15%; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--emerald), transparent);
+    }
+
+    .success-icon-wrap {
+      width: 80px; height: 80px; border-radius: 50%;
+      background: rgba(16,217,138,0.1);
+      border: 1px solid rgba(16,217,138,0.3);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 1.8rem;
+      box-shadow: 0 0 40px rgba(16,217,138,0.2);
+      animation: none;
+    }
+    .success-overlay.show .success-icon-wrap { animation: popIn 0.6s var(--ease-bounce) 0.2s both; }
+    @keyframes popIn {
+      from { transform: scale(0); opacity: 0; }
+      to   { transform: scale(1); opacity: 1; }
+    }
+    .success-icon-wrap i { font-size: 2rem; color: var(--emerald); }
+    .success-title {
+      font-family: var(--font-display);
+      font-size: 2rem; font-weight: 700;
+      color: white; margin-bottom: 0.6rem;
+    }
+    .success-sub {
+      font-family: var(--font-body);
+      font-size: 1rem; color: var(--fog);
+      line-height: 1.7; margin-bottom: 2rem;
+    }
+    .success-sub span { color: var(--emerald); font-weight: 600; }
+    .success-countdown {
+      font-family: var(--font-label);
+      font-size: 0.75rem; color: var(--fog);
+      letter-spacing: 0.08em; margin-bottom: 1.5rem;
+    }
+    .success-countdown b { color: var(--blue-bright); }
+    .success-btn {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.9rem 2.2rem;
+      background: linear-gradient(135deg, var(--emerald), #0cb574);
+      color: var(--ink); border: none; border-radius: 10px;
+      font-family: var(--font-label); font-size: 0.82rem; font-weight: 700;
+      cursor: pointer; letter-spacing: 0.05em;
+      transition: all 0.3s var(--ease-bounce);
+      box-shadow: 0 8px 28px rgba(16,217,138,0.3);
+      text-decoration: none;
+    }
+    .success-btn:hover { transform: translateY(-3px); box-shadow: 0 16px 44px rgba(16,217,138,0.45); }
+
+    .progress-ring-wrap {
+      position: relative; width: 80px; height: 80px; margin: 0 auto 1.8rem;
+    }
+    .progress-ring-wrap svg { position: absolute; inset: 0; transform: rotate(-90deg); }
+    .progress-ring-bg { fill: none; stroke: rgba(16,217,138,0.1); stroke-width: 3; }
+    .progress-ring-bar {
+      fill: none; stroke: var(--emerald); stroke-width: 3;
+      stroke-linecap: round;
+      stroke-dasharray: 220;
+      stroke-dashoffset: 220;
+      transition: stroke-dashoffset 1s linear;
+    }
+    .progress-ring-inner {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ═══════════════════════════════════════════
+       ERROR TOAST NOTIFICATION SYSTEM
+    ═══════════════════════════════════════════ */
+    .error-toast-container {
+      position: fixed;
+      top: 148px;
+      right: 2rem;
+      z-index: 8500;
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+      pointer-events: none;
+      max-width: 390px;
+      width: calc(100% - 4rem);
+    }
+
+    .error-toast {
+      background: rgba(8, 12, 28, 0.97);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      border-radius: 18px;
+      padding: 1.15rem 1.1rem 1.25rem 1.2rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(239, 68, 68, 0.05),
+        0 0 40px rgba(239, 68, 68, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(28px);
+      pointer-events: all;
+      animation: toastSlideIn 0.5s var(--ease-bounce) both;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .error-toast.dismissing {
+      animation: toastSlideOut 0.32s ease forwards;
+    }
+
+    @keyframes toastSlideIn {
+      0%  { opacity: 0; transform: translateX(52px) scale(0.88); }
+      100%{ opacity: 1; transform: translateX(0)    scale(1);    }
+    }
+    @keyframes toastSlideOut {
+      0%  { opacity: 1; transform: translateX(0)    scale(1);    max-height: 200px; margin-bottom: 0; }
+      100%{ opacity: 0; transform: translateX(52px) scale(0.9);  max-height: 0;     margin-bottom: -0.7rem; }
+    }
+
+    /* Animated shimmer bar across top */
+    .error-toast::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 1.5px;
+      background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(239, 68, 68, 0) 20%,
+        rgba(239, 68, 68, 0.9) 50%,
+        rgba(255, 120, 120, 1) 55%,
+        rgba(239, 68, 68, 0.9) 60%,
+        rgba(239, 68, 68, 0) 80%,
+        transparent 100%
+      );
+      background-size: 300% 100%;
+      animation: toastShimmer 2.2s linear infinite;
+    }
+    @keyframes toastShimmer {
+      0%   { background-position: 200% center; }
+      100% { background-position: -100% center; }
+    }
+
+    /* Subtle red glow corner */
+    .error-toast::after {
+      content: '';
+      position: absolute;
+      top: -20px; right: -20px;
+      width: 80px; height: 80px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(239, 68, 68, 0.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    /* Icon wrap with glow ring */
+    .et-icon-wrap {
+      position: relative;
+      flex-shrink: 0;
+      width: 42px; height: 42px;
+    }
+    .et-icon-wrap::before {
+      content: '';
+      position: absolute;
+      inset: -5px; border-radius: 50%;
+      background: rgba(239, 68, 68, 0.12);
+      filter: blur(8px);
+      animation: iconAura 1.8s ease-in-out infinite;
+    }
+    @keyframes iconAura {
+      0%, 100% { transform: scale(1);   opacity: 0.6; }
+      50%       { transform: scale(1.3); opacity: 1;   }
+    }
+    .et-icon {
+      position: relative; z-index: 1;
+      width: 42px; height: 42px; border-radius: 50%;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1.5px solid rgba(239, 68, 68, 0.45);
+      display: flex; align-items: center; justify-content: center;
+      color: #ff7070;
+      font-size: 1rem;
+      animation: iconBeat 1.8s ease-in-out infinite;
+    }
+    @keyframes iconBeat {
+      0%, 100% { transform: scale(1); }
+      20%       { transform: scale(1.12); }
+      40%       { transform: scale(1); }
+    }
+
+    .et-body { flex: 1; min-width: 0; }
+    .et-label {
+      font-family: var(--font-label);
+      font-size: 0.6rem; font-weight: 700;
+      color: #ff8080;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 0.3rem;
+      display: flex; align-items: center; gap: 0.4rem;
+    }
+    .et-label-dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: var(--error);
+      animation: pulse 1.5s infinite;
+    }
+    .et-message {
+      font-family: var(--font-body);
+      font-size: 0.9rem; font-weight: 500;
+      color: var(--mist);
+      line-height: 1.55;
+    }
+    .et-list {
+      margin: 0.5rem 0 0 0;
+      padding: 0; list-style: none;
+    }
+    .et-list li {
+      font-size: 0.8rem;
+      color: var(--fog);
+      padding: 0.22rem 0;
+      display: flex; align-items: flex-start; gap: 0.5rem;
+      border-bottom: 1px solid rgba(239, 68, 68, 0.07);
+    }
+    .et-list li:last-child { border-bottom: none; }
+    .et-list li::before {
+      content: '›';
+      color: #ff7070;
+      font-weight: 700;
+      margin-top: -1px;
+    }
+
+    .et-close {
+      background: none; border: none;
+      color: rgba(136, 146, 164, 0.6);
+      cursor: pointer; font-size: 0.75rem;
+      width: 26px; height: 26px;
+      border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+      flex-shrink: 0;
+      margin-top: -2px;
+    }
+    .et-close:hover {
+      color: white;
+      background: rgba(239, 68, 68, 0.15);
+    }
+
+    /* Auto-dismiss progress bar */
+    .et-progress {
+      position: absolute;
+      bottom: 0; left: 0;
+      height: 2.5px;
+      background: linear-gradient(90deg, rgba(239,68,68,0.8), rgba(255,100,100,1), rgba(239,68,68,0.8));
+      border-radius: 0 0 18px 18px;
+    }
+    .et-progress.animating {
+      animation: etProgressShrink var(--toast-duration, 5s) linear forwards;
+    }
+    @keyframes etProgressShrink {
+      from { width: 100%; opacity: 1; }
+      to   { width: 0%;   opacity: 0.4; }
+    }
+
+    /* Field shake animation */
+    @keyframes fieldShake {
+      0%,100% { transform: translateX(0); }
+      12%     { transform: translateX(-8px); }
+      25%     { transform: translateX(7px); }
+      37%     { transform: translateX(-5px); }
+      50%     { transform: translateX(5px); }
+      62%     { transform: translateX(-3px); }
+      75%     { transform: translateX(3px); }
+    }
+    .shake-field { animation: fieldShake 0.55s ease both; }
+
+    /* GSTIN inline status */
+    .gstin-hint {
+      font-size: 0.68rem;
+      font-family: var(--font-label);
+      letter-spacing: 0.05em;
+      display: flex; align-items: center; gap: 0.38rem;
+      transition: all 0.25s;
+      min-height: 1.1em;
+    }
+    .gstin-hint.idle   { color: rgba(136,146,164,0.5); }
+    .gstin-hint.typing { color: var(--amber); }
+    .gstin-hint.valid  { color: var(--emerald); }
+    .gstin-hint.invalid{ color: var(--error); }
+
+    /* Geo loading indicator */
+    .geo-loading {
+      display: flex; align-items: center; gap: 0.5rem;
+      font-size: 0.75rem; color: var(--fog);
+      font-family: var(--font-label);
+      padding: 0.5rem 0;
+    }
+    .geo-spin {
+      width: 14px; height: 14px;
+      border: 2px solid rgba(59,111,255,0.2);
+      border-top-color: var(--blue);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    /* Disabled select style */
+    .field select:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    /* step 4 */
+
+    .apps-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+      gap:1.2rem;
+      margin-bottom:2rem;
+    }
+
+    .app-card{
+      background:rgba(5,8,20,0.75);
+      border:1px solid rgba(59,111,255,0.15);
+      border-radius:18px;
+      padding:1.3rem;
+      cursor:pointer;
+      transition:all .3s ease;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .app-card:hover{
+      transform:translateY(-4px);
+      border-color:rgba(59,111,255,0.45);
+      box-shadow:0 12px 30px rgba(59,111,255,0.15);
+    }
+
+    .app-card.selected{
+      border-color:var(--emerald);
+      background:rgba(16,217,138,0.08);
+      box-shadow:0 0 0 1px rgba(16,217,138,0.25);
+    }
+
+    .app-card-top{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      margin-bottom:1rem;
+    }
+
+    .app-icon{
+      width:58px;
+      height:58px;
+      border-radius:14px;
+      overflow:hidden;
+      background:rgba(59,111,255,0.12);
+      border:1px solid rgba(59,111,255,0.15);
+      flex-shrink:0;
+    }
+
+    .app-image{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    .app-check {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+
+      background: rgba(16,217,138,0.15);
+      border: 1px solid rgba(16,217,138,0.35);
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      color: #10d98a;
+      font-size: 0.75rem;
+
+      opacity: 0;
+      transform: scale(0.8);
+
+      transition: all 0.25s ease;
+    }
+
+    .app-card.selected .app-check{
+      opacity: 1;
+      transform: scale(1);
+      background:var(--emerald);
+      border-color:var(--emerald);
+      color:#000;
+    }
+
+    .app-title{
+      font-size:1.05rem;
+      font-weight:700;
+      color:white;
+      margin-bottom:.45rem;
+    }
+
+    .app-subtitle{
+      font-size:.8rem;
+      color:var(--blue-bright);
+      margin-bottom:.7rem;
+    }
+
+    .app-desc{
+      font-size:.88rem;
+      color:var(--fog);
+      line-height:1.6;
+      margin-bottom:1rem;
+    }
+
+    .app-features{
+      display:flex;
+      flex-wrap:wrap;
+      gap:.45rem;
+    }
+
+    .app-feature{
+      padding:.3rem .7rem;
+      border-radius:100px;
+      background:rgba(59,111,255,0.08);
+      border:1px solid rgba(59,111,255,0.12);
+      font-size:.7rem;
+      color:var(--mist);
+    }
+      </style>
+</head>
+<body>
+
+  <div class="orb-1"></div>
+  <div class="orb-2"></div>
+  <div class="cursor-dot" id="cursorDot"></div>
+  <div class="cursor-ring" id="cursorRing"></div>
+
+  <!-- ERROR TOAST CONTAINER -->
+  <div class="error-toast-container" id="errorToastContainer"></div>
+
+  <!-- NAVBAR -->
+  <header class="navbar" id="navbar">
+    <a href="/" class="logo">
+      <div class="logo-mark" id="logoIcon">Q</div>
+      <span class="logo-name" id="logoText">Quantbit <span>Technologies Pvt Ltd</span></span>
+    </a>
+    <nav>
+      <a href="/" style="font-family:var(--font-body);font-size:1rem;color:var(--fog);text-decoration:none;transition:color 0.3s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='var(--fog)'">Home</a>
+      <a href="/login" class="btn-nav-login"><i class="fas fa-sign-in-alt"></i> Login</a>
+    </nav>
+  </header>
+
+  <!-- APPS BAR -->
+  <div class="apps-bar">
+    <div class="apps-bar-inner" id="appsPills">
+      <span style="font-size:0.8rem;font-family:var(--font-body);color:var(--fog);display:flex;align-items:center;gap:0.5rem;">
+        <span style="width:14px;height:14px;border:2px solid rgba(59,111,255,0.3);border-top-color:var(--blue);border-radius:50%;animation:spin 1s linear infinite;display:inline-block;"></span>
+        Loading modules…
+      </span>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content">
+
+    <!-- Page Header -->
+    <div class="page-header">
+      <div class="page-eyebrow">
+        <div class="eyebrow-dot"></div>
+        Create Your Account
+      </div>
+      <h1 class="page-title">Start Your <span class="g">Journey</span></h1>
+      <p class="page-sub">Set up your organisation and get access to the full Quantbit platform in minutes.</p>
+    </div>
+
+    <!-- Stepper -->
+    <div class="steps-container">
+      <div class="step-item active" id="si-1">
+        <div class="step-circle">1</div>
+        <span class="step-label">Company</span>
+      </div>
+      <div class="step-item" id="si-2">
+        <div class="step-circle">2</div>
+        <span class="step-label">Location</span>
+      </div>
+      <div class="step-item" id="si-3">
+        <div class="step-circle">3</div>
+        <span class="step-label">Admin</span>
+      </div>
+      <div class="step-item" id="si-4">
+        <div class="step-circle">4</div>
+        <span class="step-label">Services</span>
+      </div>
+    </div>
+
+    <!-- Form Card -->
+    <div class="registration-wrapper">
+      <form id="billing-registration-form">
+
+        <!-- STEP 1: Company -->
+        <div class="form-step active" id="step-1">
+          <h2 class="step-heading">Company Profile</h2>
+          <p class="step-sub">Tell us about your organisation to get started.</p>
+          <div class="grid">
+            <div class="field full-width">
+              <label>Company Name</label>
+              <input type="text" id="company_name" placeholder="Acme Enterprises Pvt Ltd" required />
+            </div>
+            <div class="field">
+              <label>Abbreviation</label>
+              <input type="text" id="abbr" placeholder="ACME" required />
+            </div>
+            <div class="field">
+              <label>GSTIN</label>
+              <input type="text" id="gstin" placeholder="22AAAAA0000A1Z5" maxlength="15" autocomplete="off" />
+              <!-- Real-time GSTIN status indicator -->
+              <span class="gstin-hint idle" id="gstinHint">
+                <i class="fas fa-info-circle"></i> 15-character GST Identification Number
+              </span>
+            </div>
+            <div class="field">
+              <label>Currency</label>
+              <div class="select-wrap">
+                <select id="default_currency"></select>
+              </div>
+            </div>
+            <div class="field">
+              <label>Country</label>
+              <div class="select-wrap">
+                <select id="country"></select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 2: Address — STATE before CITY, both cascading selects -->
+        <div class="form-step" id="step-2">
+          <h2 class="step-heading">Office Address</h2>
+          <p class="step-sub">Where should we send your billing information?</p>
+          <div class="grid">
+            <div class="field full-width">
+              <label>Address Line 1</label>
+              <input type="text" id="address_line1" placeholder="123 Business Park, MG Road" required />
+            </div>
+            <div class="field full-width">
+              <label>Address Line 2</label>
+              <input type="text" id="address_line2" placeholder="Suite 400, Floor 4 (optional)" />
+            </div>
+
+            <!-- STATE — populated from country selection -->
+            <div class="field" id="state-field">
+              <label>State / Province</label>
+              <div class="select-wrap" id="state-input-wrap">
+                <!-- Replaced dynamically by populateStates() -->
+                <select id="state" required>
+                  <option value="" disabled selected>Select country first…</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- CITY — populated from state selection -->
+            <div class="field" id="city-field">
+              <label>City</label>
+              <div class="select-wrap" id="city-input-wrap">
+                <!-- Replaced dynamically by populateCities() -->
+                <select id="city" required>
+                  <option value="" disabled selected>Select state first…</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field full-width">
+              <label>Pincode</label>
+              <input type="text" id="pincode" placeholder="400001" />
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 3: Admin -->
+        <div class="form-step" id="step-3">
+          <h2 class="step-heading">Master Administrator</h2>
+          <p class="step-sub">Set up the primary account owner and credentials.</p>
+          <div class="grid">
+            <div class="field">
+              <label>First Name</label>
+              <input type="text" id="first_name" placeholder="Rahul" />
+            </div>
+            <div class="field">
+              <label>Last Name</label>
+              <input type="text" id="last_name" placeholder="Sharma" />
+            </div>
+            <div class="field full-width">
+              <label>Work Email</label>
+              <input type="email" id="email" placeholder="rahul@company.com" required />
+            </div>
+            <div class="field full-width">
+              <label>Password</label>
+              <input type="password" id="user_password" placeholder="Create a strong password" required />
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 4: Apps -->
+        <div class="form-step" id="step-4">
+          <h2 class="step-heading">Select Applications</h2>
+          <p class="step-sub">Choose the modules you wish to activate for your organisation.</p>
+          <div class="apps-grid" id="apps-grid"></div>
+          <table class="app-table" id="app-table">
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <!-- Button Row -->
+        <div class="button-group">
+          <button type="button" class="btn btn-prev" id="prevBtn" style="visibility:hidden">
+            <i class="fas fa-arrow-left"></i> Back
+          </button>
+          <button type="button" class="btn btn-next" id="nextBtn">
+            Continue <i class="fas fa-arrow-right"></i>
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div><!-- /main-content -->
+
+  <style>
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+
+  <script>
+    let currentStep = 1;
+    let allApps = [];
+    let selected_apps = [];
+
+    /* ══════════════════════════════════════════
+       GEO DATA — Country → States → Cities
+    ══════════════════════════════════════════ */
+    const GEO_DATA = {
+      'India': {
+        'Andhra Pradesh':           ['Visakhapatnam','Vijayawada','Guntur','Nellore','Kurnool','Tirupati','Kakinada','Rajahmundry'],
+        'Arunachal Pradesh':        ['Itanagar','Naharlagun','Pasighat','Tawang','Ziro'],
+        'Assam':                    ['Guwahati','Silchar','Dibrugarh','Jorhat','Nagaon','Tinsukia'],
+        'Bihar':                    ['Patna','Gaya','Muzaffarpur','Bhagalpur','Darbhanga','Purnia'],
+        'Chhattisgarh':             ['Raipur','Bhilai','Bilaspur','Durg','Korba','Raigarh'],
+        'Goa':                      ['Panaji','Margao','Vasco da Gama','Mapusa','Ponda'],
+        'Gujarat':                  ['Ahmedabad','Surat','Vadodara','Rajkot','Bhavnagar','Gandhinagar','Jamnagar','Junagadh'],
+        'Haryana':                  ['Faridabad','Gurugram','Panipat','Ambala','Rohtak','Hisar','Karnal','Sonipat'],
+        'Himachal Pradesh':         ['Shimla','Solan','Dharamshala','Mandi','Baddi','Kullu'],
+        'Jharkhand':                ['Ranchi','Jamshedpur','Dhanbad','Bokaro','Hazaribagh','Giridih'],
+        'Karnataka':                ['Bengaluru','Mysuru','Mangaluru','Hubballi','Belagavi','Kalaburagi','Davangere','Shivamogga'],
+        'Kerala':                   ['Thiruvananthapuram','Kochi','Kozhikode','Thrissur','Kollam','Kannur','Palakkad','Malappuram'],
+        'Madhya Pradesh':           ['Bhopal','Indore','Jabalpur','Gwalior','Ujjain','Sagar','Ratlam','Dewas'],
+        'Maharashtra':              ['Mumbai','Pune','Nagpur','Thane','Nashik','Aurangabad','Solapur','Kolhapur','Navi Mumbai'],
+        'Manipur':                  ['Imphal','Churachandpur','Thoubal','Bishnupur'],
+        'Meghalaya':                ['Shillong','Tura','Nongstoin','Jowai'],
+        'Mizoram':                  ['Aizawl','Lunglei','Champhai','Kolasib'],
+        'Nagaland':                 ['Kohima','Dimapur','Mokokchung','Wokha'],
+        'Odisha':                   ['Bhubaneswar','Cuttack','Rourkela','Berhampur','Sambalpur','Puri'],
+        'Punjab':                   ['Ludhiana','Amritsar','Jalandhar','Patiala','Bathinda','Mohali'],
+        'Rajasthan':                ['Jaipur','Jodhpur','Kota','Udaipur','Ajmer','Bikaner','Alwar','Bharatpur'],
+        'Sikkim':                   ['Gangtok','Namchi','Mangan','Jorethang'],
+        'Tamil Nadu':               ['Chennai','Coimbatore','Madurai','Tiruchirappalli','Salem','Tirunelveli','Erode','Vellore','Tiruppur'],
+        'Telangana':                ['Hyderabad','Warangal','Nizamabad','Karimnagar','Khammam','Ramagundam'],
+        'Tripura':                  ['Agartala','Udaipur','Dharmanagar','Kailasahar'],
+        'Uttar Pradesh':            ['Lucknow','Kanpur','Agra','Varanasi','Prayagraj','Meerut','Noida','Ghaziabad','Bareilly','Moradabad'],
+        'Uttarakhand':              ['Dehradun','Haridwar','Roorkee','Rishikesh','Haldwani','Nainital'],
+        'West Bengal':              ['Kolkata','Asansol','Siliguri','Durgapur','Howrah','Bardhaman','Kharagpur'],
+        'Andaman and Nicobar Islands': ['Port Blair','Car Nicobar','Diglipur'],
+        'Chandigarh':               ['Chandigarh'],
+        'Dadra and Nagar Haveli and Daman and Diu': ['Daman','Silvassa','Diu'],
+        'Delhi':                    ['New Delhi','Dwarka','Rohini','Pitampura','Lajpat Nagar','Saket','Janakpuri','Shahdara'],
+        'Jammu and Kashmir':        ['Srinagar','Jammu','Anantnag','Sopore','Baramulla'],
+        'Ladakh':                   ['Leh','Kargil'],
+        'Lakshadweep':              ['Kavaratti'],
+        'Puducherry':               ['Puducherry','Karaikal','Yanam','Mahé']
+      },
+      'United States': {
+        'California':               ['Los Angeles','San Francisco','San Diego','San Jose','Sacramento','Fresno','Long Beach','Oakland'],
+        'Texas':                    ['Houston','Austin','Dallas','San Antonio','Fort Worth','El Paso','Arlington','Plano'],
+        'New York':                 ['New York City','Buffalo','Albany','Rochester','Syracuse','Yonkers','White Plains'],
+        'Florida':                  ['Miami','Orlando','Tampa','Jacksonville','Fort Lauderdale','St. Petersburg','Tallahassee'],
+        'Illinois':                 ['Chicago','Aurora','Naperville','Joliet','Rockford','Springfield','Peoria'],
+        'Pennsylvania':             ['Philadelphia','Pittsburgh','Allentown','Erie','Reading','Scranton','Bethlehem'],
+        'Ohio':                     ['Columbus','Cleveland','Cincinnati','Toledo','Akron','Dayton','Canton'],
+        'Georgia':                  ['Atlanta','Augusta','Columbus','Savannah','Athens','Macon','Roswell'],
+        'North Carolina':           ['Charlotte','Raleigh','Greensboro','Durham','Winston-Salem','Cary','Fayetteville'],
+        'Michigan':                 ['Detroit','Grand Rapids','Warren','Sterling Heights','Ann Arbor','Lansing','Flint'],
+        'Washington':               ['Seattle','Spokane','Tacoma','Bellevue','Kirkland','Renton','Redmond'],
+        'Colorado':                 ['Denver','Colorado Springs','Aurora','Fort Collins','Lakewood','Thornton','Arvada'],
+        'Arizona':                  ['Phoenix','Tucson','Mesa','Scottsdale','Tempe','Chandler','Gilbert'],
+        'Massachusetts':            ['Boston','Worcester','Springfield','Cambridge','Lowell','Brockton','Quincy'],
+        'Virginia':                 ['Virginia Beach','Norfolk','Chesapeake','Richmond','Arlington','Newport News','Alexandria'],
+        'New Jersey':               ['Newark','Jersey City','Paterson','Elizabeth','Trenton','Clifton','Camden'],
+        'Tennessee':                ['Nashville','Memphis','Knoxville','Chattanooga','Clarksville','Murfreesboro'],
+        'Indiana':                  ['Indianapolis','Fort Wayne','Evansville','South Bend','Carmel','Bloomington'],
+        'Missouri':                 ['Kansas City','St. Louis','Springfield','Columbia','Independence','Lee\'s Summit'],
+        'Maryland':                 ['Baltimore','Columbia','Germantown','Silver Spring','Rockville','Bethesda']
+      },
+      'United Kingdom': {
+        'England':                  ['London','Manchester','Birmingham','Leeds','Sheffield','Liverpool','Bristol','Newcastle','Nottingham','Southampton'],
+        'Scotland':                 ['Edinburgh','Glasgow','Aberdeen','Dundee','Inverness','Stirling','Perth'],
+        'Wales':                    ['Cardiff','Swansea','Newport','Bangor','Wrexham','St Davids'],
+        'Northern Ireland':         ['Belfast','Londonderry','Lisburn','Newry','Armagh','Ballymena']
+      },
+      'Australia': {
+        'New South Wales':          ['Sydney','Newcastle','Wollongong','Parramatta','Gosford','Maitland','Albury'],
+        'Victoria':                 ['Melbourne','Geelong','Ballarat','Bendigo','Shepparton','Melton','Mildura'],
+        'Queensland':               ['Brisbane','Gold Coast','Sunshine Coast','Townsville','Cairns','Toowoomba','Mackay'],
+        'Western Australia':        ['Perth','Fremantle','Bunbury','Geraldton','Albany','Kalgoorlie'],
+        'South Australia':          ['Adelaide','Gawler','Whyalla','Mount Gambier','Port Augusta','Port Pirie'],
+        'Tasmania':                 ['Hobart','Launceston','Devonport','Burnie','Ulverstone'],
+        'Australian Capital Territory': ['Canberra','Tuggeranong','Belconnen','Gungahlin'],
+        'Northern Territory':       ['Darwin','Alice Springs','Palmerston','Katherine']
+      },
+      'Canada': {
+        'Ontario':                  ['Toronto','Ottawa','Mississauga','Brampton','Hamilton','London','Markham','Vaughan'],
+        'Quebec':                   ['Montreal','Quebec City','Laval','Gatineau','Longueuil','Sherbrooke'],
+        'British Columbia':         ['Vancouver','Victoria','Surrey','Burnaby','Richmond','Kelowna','Abbotsford'],
+        'Alberta':                  ['Calgary','Edmonton','Red Deer','Lethbridge','St. Albert','Medicine Hat'],
+        'Manitoba':                 ['Winnipeg','Brandon','Steinbach','Thompson','Portage la Prairie'],
+        'Saskatchewan':             ['Saskatoon','Regina','Prince Albert','Moose Jaw','Swift Current'],
+        'Nova Scotia':              ['Halifax','Dartmouth','Sydney','Truro','New Glasgow'],
+        'New Brunswick':            ['Fredericton','Moncton','Saint John','Miramichi','Bathurst'],
+        'Newfoundland and Labrador':["St. John's",'Mount Pearl','Corner Brook','Gander'],
+        'Prince Edward Island':     ['Charlottetown','Summerside'],
+        'Northwest Territories':    ['Yellowknife','Hay River','Inuvik'],
+        'Yukon':                    ['Whitehorse','Dawson City','Watson Lake'],
+        'Nunavut':                  ['Iqaluit','Rankin Inlet','Arviat']
+      },
+      'United Arab Emirates': {
+        'Abu Dhabi':                ['Abu Dhabi','Al Ain','Khalifa City','Musaffah','Yas Island'],
+        'Dubai':                    ['Dubai','Deira','Bur Dubai','Jumeirah','Business Bay','Dubai Marina','Downtown Dubai'],
+        'Sharjah':                  ['Sharjah','Khor Fakkan','Kalba','Dhaid'],
+        'Ajman':                    ['Ajman','Masfout'],
+        'Umm Al Quwain':            ['Umm Al Quwain','Falaj Al Mualla'],
+        'Ras Al Khaimah':           ['Ras Al Khaimah','Al Jazeera Al Hamra','Khor Khwair'],
+        'Fujairah':                 ['Fujairah','Dibba Al Fujairah','Khorfakkan']
+      },
+      'Singapore': {
+        'Central Region':           ['Orchard','Marina Bay','Chinatown','Little India','Raffles Place','Tanjong Pagar'],
+        'East Region':              ['Tampines','Changi','Bedok','Pasir Ris','Simei'],
+        'North Region':             ['Yishun','Sembawang','Woodlands','Admiralty','Marsiling'],
+        'North-East Region':        ['Ang Mo Kio','Sengkang','Hougang','Punggol','Serangoon'],
+        'West Region':              ['Jurong East','Jurong West','Clementi','Buona Vista','Tuas','Boon Lay']
+      },
+      'Germany': {
+        'Bavaria':                  ['Munich','Nuremberg','Augsburg','Regensburg','Ingolstadt','Würzburg'],
+        'North Rhine-Westphalia':   ['Cologne','Düsseldorf','Dortmund','Essen','Duisburg','Bochum','Wuppertal'],
+        'Baden-Württemberg':        ['Stuttgart','Mannheim','Karlsruhe','Freiburg','Heidelberg','Ulm','Heilbronn'],
+        'Berlin':                   ['Berlin','Mitte','Charlottenburg','Prenzlauer Berg','Kreuzberg'],
+        'Hamburg':                  ['Hamburg','Altona','Harburg','Bergedorf'],
+        'Hesse':                    ['Frankfurt','Wiesbaden','Kassel','Darmstadt','Offenbach'],
+        'Saxony':                   ['Dresden','Leipzig','Chemnitz','Zwickau'],
+        'Lower Saxony':             ['Hannover','Braunschweig','Osnabrück','Wolfsburg','Göttingen'],
+        'Rhineland-Palatinate':     ['Mainz','Ludwigshafen','Trier','Koblenz','Kaiserslautern'],
+        'Schleswig-Holstein':       ['Kiel','Lübeck','Flensburg','Neumünster']
+      },
+      'France': {
+        'Île-de-France':            ['Paris','Boulogne-Billancourt','Versailles','Argenteuil','Saint-Denis'],
+        'Auvergne-Rhône-Alpes':     ['Lyon','Grenoble','Saint-Étienne','Clermont-Ferrand','Annecy'],
+        'Nouvelle-Aquitaine':       ['Bordeaux','Limoges','Poitiers','Pau','La Rochelle'],
+        'Occitanie':                ['Toulouse','Montpellier','Nîmes','Perpignan','Béziers'],
+        'Hauts-de-France':          ['Lille','Amiens','Roubaix','Tourcoing','Calais'],
+        'Grand Est':                ['Strasbourg','Reims','Metz','Nancy','Mulhouse'],
+        "Provence-Alpes-Côte d'Azur":['Marseille','Nice','Toulon','Aix-en-Provence','Avignon'],
+        'Pays de la Loire':         ['Nantes','Angers','Le Mans','Saint-Nazaire'],
+        'Bretagne':                 ['Rennes','Brest','Quimper','Lorient'],
+        'Normandie':                ['Rouen','Caen','Le Havre','Cherbourg']
+      }
+    };
+
+    /* ══════════════════════════════════════════
+       ERROR TOAST SYSTEM
+    ══════════════════════════════════════════ */
+    const TOAST_DURATION = 5000; // ms
+
+    function showErrorToast(errors, title = 'Please fix the following') {
+      const container = document.getElementById('errorToastContainer');
+      const id = 'toast-' + Date.now();
+
+      // Build error list HTML
+      let bodyHtml;
+      if (Array.isArray(errors) && errors.length > 1) {
+        const items = errors.map(e => `<li>${e}</li>`).join('');
+        bodyHtml = `<ul class="et-list">${items}</ul>`;
+      } else {
+        const msg = Array.isArray(errors) ? errors[0] : errors;
+        bodyHtml = `<p class="et-message">${msg}</p>`;
+      }
+
+      const toast = document.createElement('div');
+      toast.className = 'error-toast';
+      toast.id = id;
+      toast.innerHTML = `
+        <div class="et-icon-wrap">
+          <div class="et-icon"><i class="fas fa-exclamation"></i></div>
+        </div>
+        <div class="et-body">
+          <div class="et-label">
+            <span class="et-label-dot"></span>
+            ${title}
+          </div>
+          ${bodyHtml}
+        </div>
+        <button class="et-close" onclick="dismissToast('${id}')" title="Dismiss">
+          <i class="fas fa-times"></i>
+        </button>
+        <div class="et-progress animating" style="--toast-duration:${TOAST_DURATION}ms;"></div>
+      `;
+
+      container.appendChild(toast);
+
+      // Auto dismiss
+      setTimeout(() => dismissToast(id), TOAST_DURATION);
+    }
+
+    function dismissToast(id) {
+      const toast = document.getElementById(id);
+      if (!toast || toast.classList.contains('dismissing')) return;
+      toast.classList.add('dismissing');
+      setTimeout(() => toast && toast.remove(), 350);
+    }
+
+    /* ══════════════════════════════════════════
+       GSTIN REAL-TIME VALIDATION
+    ══════════════════════════════════════════ */
+    const GSTIN_RE = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+
+    function validateGSTIN(val) {
+      return GSTIN_RE.test(val.toUpperCase());
+    }
+
+    function setGSTINHint(mode, message) {
+      const hint = document.getElementById('gstinHint');
+      hint.className = `gstin-hint ${mode}`;
+      const icons = {
+        idle:    'fa-info-circle',
+        typing:  'fa-spinner fa-spin',
+        valid:   'fa-check-circle',
+        invalid: 'fa-times-circle'
+      };
+      hint.innerHTML = `<i class="fas ${icons[mode]}"></i> ${message}`;
+    }
+
+    function initGSTINValidation() {
+      const gstinInput = document.getElementById('gstin');
+
+      gstinInput.addEventListener('input', () => {
+        let raw = gstinInput.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        gstinInput.value = raw;
+
+        if (raw.length === 0) {
+          gstinInput.classList.remove('error', 'valid');
+          setGSTINHint('idle', '15-character GST Identification Number');
+          return;
+        }
+
+        if (raw.length < 15) {
+          gstinInput.classList.remove('error', 'valid');
+          setGSTINHint('typing', `${raw.length}/15 characters entered — keep typing…`);
+          return;
+        }
+
+        // Length == 15: validate immediately on input
+        if (validateGSTIN(raw)) {
+          gstinInput.classList.remove('error');
+          gstinInput.classList.add('valid');
+          setGSTINHint('valid', 'Valid GSTIN ✓');
+        } else {
+          gstinInput.classList.remove('valid');
+          gstinInput.classList.add('error');
+          setGSTINHint('invalid', 'Invalid format — expected: 22AAAAA0000A1Z5');
+          shakeField(gstinInput);
+        }
+      });
+
+      gstinInput.addEventListener('blur', () => {
+        const raw = gstinInput.value.trim();
+        if (raw.length === 0) {
+          gstinInput.classList.remove('error', 'valid');
+          setGSTINHint('idle', '15-character GST Identification Number');
+          return;
+        }
+        if (raw.length > 0 && raw.length < 15) {
+          gstinInput.classList.add('error');
+          setGSTINHint('invalid', `Incomplete — ${raw.length}/15 characters`);
+          shakeField(gstinInput);
+          showErrorToast([`GSTIN must be exactly 15 characters (currently ${raw.length})`], 'GSTIN Validation');
+          return;
+        }
+        if (raw.length === 15 && !validateGSTIN(raw)) {
+          gstinInput.classList.add('error');
+          setGSTINHint('invalid', 'Invalid GSTIN — please check and re-enter');
+          showErrorToast(['Invalid GSTIN format. Expected pattern: 22AAAAA0000A1Z5'], 'GSTIN Validation');
+        }
+      });
+    }
+
+    /* ══════════════════════════════════════════
+       GEO CASCADE — State & City Selects
+    ══════════════════════════════════════════ */
+    function populateStates(country) {
+      const stateWrap = document.getElementById('state-input-wrap');
+      const cityWrap  = document.getElementById('city-input-wrap');
+
+      const data = GEO_DATA[country];
+
+      if (data) {
+        // Replace with populated select
+        stateWrap.innerHTML = '';
+        stateWrap.className = 'select-wrap';
+        const sel = document.createElement('select');
+        sel.id = 'state';
+        sel.required = true;
+        sel.innerHTML = '<option value="" disabled selected>Select state / province…</option>';
+        Object.keys(data).sort().forEach(st => {
+          const opt = document.createElement('option');
+          opt.value = st; opt.textContent = st;
+          sel.appendChild(opt);
+        });
+        stateWrap.appendChild(sel);
+
+        // Reset city
+        cityWrap.innerHTML = '';
+        cityWrap.className = 'select-wrap';
+        const citySel = document.createElement('select');
+        citySel.id = 'city';
+        citySel.required = true;
+        citySel.disabled = true;
+        citySel.innerHTML = '<option value="" disabled selected>Select state first…</option>';
+        cityWrap.appendChild(citySel);
+
+        sel.addEventListener('change', () => populateCities(country, sel.value));
+      } else {
+        // No data — fall back to text inputs
+        stateWrap.innerHTML = '';
+        stateWrap.className = '';
+        const inp = document.createElement('input');
+        inp.type = 'text'; inp.id = 'state'; inp.placeholder = 'Enter state / province';
+        inp.style.cssText = 'height:50px;padding:0 16px;background:rgba(5,8,20,0.6);border:1px solid rgba(59,111,255,0.18);border-radius:10px;font-family:var(--font-body);font-size:1rem;color:white;width:100%;transition:all 0.25s;';
+        stateWrap.appendChild(inp);
+
+        cityWrap.innerHTML = '';
+        cityWrap.className = '';
+        const cityInp = document.createElement('input');
+        cityInp.type = 'text'; cityInp.id = 'city'; cityInp.placeholder = 'Enter city';
+        cityInp.style.cssText = inp.style.cssText;
+        cityWrap.appendChild(cityInp);
+      }
+    }
+
+    function populateCities(country, state) {
+      const cityWrap = document.getElementById('city-input-wrap');
+      const data = GEO_DATA[country];
+
+      if (data && data[state] && data[state].length > 0) {
+        cityWrap.innerHTML = '';
+        cityWrap.className = 'select-wrap';
+        const citySel = document.createElement('select');
+        citySel.id = 'city';
+        citySel.required = true;
+        citySel.innerHTML = '<option value="" disabled selected>Select city…</option>';
+        data[state].forEach(city => {
+          const opt = document.createElement('option');
+          opt.value = city; opt.textContent = city;
+          citySel.appendChild(opt);
+        });
+        // "Other" option for unlisted cities
+        const divider = document.createElement('option');
+        divider.disabled = true;
+        divider.textContent = '──────────────';
+        citySel.appendChild(divider);
+        const other = document.createElement('option');
+        other.value = '__other__'; other.textContent = 'Other — type below';
+        citySel.appendChild(other);
+        cityWrap.appendChild(citySel);
+
+        citySel.addEventListener('change', () => {
+          if (citySel.value === '__other__') {
+            cityWrap.innerHTML = '';
+            cityWrap.className = '';
+            const inp = document.createElement('input');
+            inp.type = 'text'; inp.id = 'city'; inp.placeholder = 'Type your city name…';
+            inp.style.cssText = 'height:50px;padding:0 16px;background:rgba(5,8,20,0.6);border:1px solid rgba(59,111,255,0.18);border-radius:10px;font-family:var(--font-body);font-size:1rem;color:white;width:100%;transition:all 0.25s;';
+            cityWrap.appendChild(inp);
+            // Back link
+            const back = document.createElement('button');
+            back.type = 'button';
+            back.textContent = '↩ Back to city list';
+            back.style.cssText = 'background:none;border:none;color:var(--blue-bright);font-size:0.7rem;font-family:var(--font-label);cursor:pointer;margin-top:0.35rem;letter-spacing:0.05em;padding:0;';
+            back.addEventListener('click', () => populateCities(country, state));
+            cityWrap.appendChild(back);
+            inp.focus();
+          }
+        });
+      } else {
+        cityWrap.innerHTML = '';
+        cityWrap.className = '';
+        const inp = document.createElement('input');
+        inp.type = 'text'; inp.id = 'city'; inp.placeholder = 'Enter city';
+        inp.style.cssText = 'height:50px;padding:0 16px;background:rgba(5,8,20,0.6);border:1px solid rgba(59,111,255,0.18);border-radius:10px;font-family:var(--font-body);font-size:1rem;color:white;width:100%;transition:all 0.25s;';
+        cityWrap.appendChild(inp);
+      }
+    }
+
+    /* ══════════════════════════════════════════
+       FIELD SHAKE HELPER
+    ══════════════════════════════════════════ */
+    function shakeField(el) {
+      el.classList.remove('shake-field');
+      void el.offsetWidth; // reflow to restart
+      el.classList.add('shake-field');
+      el.addEventListener('animationend', () => el.classList.remove('shake-field'), { once: true });
+    }
+
+    /* ── CURSOR ── */
+    const dot  = document.getElementById('cursorDot');
+    const ring = document.getElementById('cursorRing');
+    let mx = 0, my = 0, rx = 0, ry = 0;
+
+    document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+
+    function animCursor() {
+      rx += (mx - rx) * 0.15;
+      ry += (my - ry) * 0.15;
+      dot.style.left = mx + 'px'; dot.style.top = my + 'px';
+      ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
+      requestAnimationFrame(animCursor);
+    }
+    animCursor();
+
+    document.querySelectorAll('a, button, input, select, .pill').forEach(el => {
+      el.addEventListener('mouseenter', () => { ring.style.width='52px'; ring.style.height='52px'; dot.style.background='var(--cyan)'; });
+      el.addEventListener('mouseleave', () => { ring.style.width='36px'; ring.style.height='36px'; dot.style.background='var(--blue)'; });
+    });
+
+    /* ── NAVBAR SCROLL ── */
+    window.addEventListener('scroll', () => {
+      document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 60);
+    });
+
+    /* ── AUTO ABBREVIATION ── */
+    const IGNORE_WORDS = new Set(['pvt','ltd','private','limited','and','the','of','llp','inc','corp','co','llc']);
+
+    function generateAbbr(name) {
+      return name.trim().split(/\s+/)
+        .filter(w => w.length > 0 && !IGNORE_WORDS.has(w.toLowerCase().replace(/[^a-z]/g, '')))
+        .map(w => w[0]).join('').toUpperCase().slice(0, 5);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadOptions();
+      initGSTINValidation();
+
+      // document.getElementById('add-app-btn').addEventListener('click', addApp);
+      document.getElementById('nextBtn').addEventListener('click', handleNext);
+      document.getElementById('prevBtn').addEventListener('click', handlePrev);
+
+      const companyInput = document.getElementById('company_name');
+      const abbrInput    = document.getElementById('abbr');
+      let userEditedAbbr = false;
+      abbrInput.addEventListener('input', () => { userEditedAbbr = true; });
+      companyInput.addEventListener('input', () => {
+        if (!userEditedAbbr) abbrInput.value = generateAbbr(companyInput.value);
+      });
+
+      // When country changes, re-populate states (for step 2)
+      document.getElementById('country').addEventListener('change', function () {
+        populateStates(this.value);
+      });
+    });
+
+    /* ── NAVIGATION ── */
+    function handleNext() {
+      if (currentStep < 4) {
+        if (validateStep(currentStep)) {
+          currentStep++;
+          updateUI();
+          // When entering step 2, ensure state/city are seeded from selected country
+          if (currentStep === 2) {
+            const country = document.getElementById('country').value;
+            if (country) populateStates(country);
+          }
+        }
+      } else {
+        if (selected_apps.length === 0) {
+          showErrorToast(['Please add at least one application to continue.'], 'No Application Selected');
+          return;
+        }
+        submitForm();
+      }
+    }
+
+    function handlePrev() {
+      if (currentStep > 1) { currentStep--; updateUI(); }
+    }
+
+    /* ── STEP VALIDATION with Toast Errors ── */
+    function validateStep(stepId) {
+      const step = document.getElementById(`step-${stepId}`);
+      const requiredInputs = step.querySelectorAll('input[required], select[required]');
+      const errors  = [];
+      const toShake = [];
+      let valid = true;
+
+      requiredInputs.forEach(input => {
+        const val = input.value ? input.value.trim() : '';
+        if (!val) {
+          input.classList.add('error');
+          toShake.push(input);
+          valid = false;
+          // Collect friendly label
+          const label = input.closest('.field')?.querySelector('label')?.textContent?.trim();
+          if (label) errors.push(`${label} is required`);
+        } else {
+          input.classList.remove('error');
+        }
+      });
+
+      // Extra: GSTIN format check on step 1 if filled
+      if (stepId === 1) {
+        const gstinVal = document.getElementById('gstin').value.trim();
+        if (gstinVal && !validateGSTIN(gstinVal)) {
+          const gstinEl = document.getElementById('gstin');
+          gstinEl.classList.add('error');
+          toShake.push(gstinEl);
+          errors.push('GSTIN format is invalid — please correct it before proceeding');
+          valid = false;
+        }
+      }
+
+      if (!valid) {
+        // Shake each erroneous field
+        toShake.forEach(el => shakeField(el));
+        // Show single toast with all errors
+        showErrorToast(errors, 'Required Fields Missing');
+      }
+
+      return valid;
+    }
+
+    function updateUI() {
+      document.querySelectorAll('.form-step').forEach(s => s.classList.remove('active'));
+      document.getElementById(`step-${currentStep}`).classList.add('active');
+
+      document.querySelectorAll('.step-item').forEach((item, idx) => {
+        item.classList.toggle('active',    idx + 1 === currentStep);
+        item.classList.toggle('completed', idx + 1 <  currentStep);
+      });
+
+      document.getElementById('prevBtn').style.visibility = currentStep === 1 ? 'hidden' : 'visible';
+
+      const nextBtn = document.getElementById('nextBtn');
+      nextBtn.innerHTML = currentStep === 4
+        ? '<i class="fas fa-check"></i> Create Account'
+        : 'Continue <i class="fas fa-arrow-right"></i>';
+    }
+
+    function formatAppName(app) {
+      return app.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    }
+
+    /* ── LOAD OPTIONS ── */
+    async function loadOptions() {
+      try {
+        const appsRes = await fetch('/api/method/quantbit_billing_platform.apps.get_billing_modules', {
+          credentials: 'include', headers: { Accept: 'application/json' }
+        });
+        const appsData = await appsRes.json();
+
+        let apps = [];
+        if (appsData.message === 'success' && Array.isArray(appsData.data)) {
+          apps = appsData.data;
+          allApps = apps;
+          // window.allApps = apps;
+        } else if (appsData.message?.message === 'success' && Array.isArray(appsData.message.data)) {
+            apps = appsData.message.data;
+            allApps = apps;
+        }
+
+        console.log("Apps:", apps);
+
+        document.getElementById('appsPills').innerHTML = apps.map(app => `
+          <a href="features.html?app=${encodeURIComponent(app.name)}" class="pill">
+            <i class="fas fa-cube"></i> ${app.title || formatAppName(app.name)}
+          </a>
+        `).join('');
+
+        renderAppCards(apps);
+
+        const res  = await fetch('/api/method/quantbit_billing_platform.quantbit_billing_platform.doctype.billing_account_master.billing_account_master.get_registration_options');
+        const r    = await res.json();
+        const data = r.message;
+
+        if (data) {
+          fillSelect('country',          data.countries  || [], 'India');
+          fillSelect('default_currency', data.currencies || [], 'INR');
+          // Seed state/city for the default country
+          const defaultCountry = (data.countries || []).find(c => c.toLowerCase() === 'india') || 'India';
+          populateStates(defaultCountry);
+        }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const pkgApp = urlParams.get('pkg_app');
+        if (pkgApp) { selected_apps.push({ name: pkgApp }); renderTable(); }
+
+      } catch (err) {
+        console.error('Load options error:', err);
+        showErrorToast(['Failed to load registration options. Please check if the backend is running.'], 'Connection Error');
+        // Still seed India states as default
+        populateStates('India');
+      }
+    }
+
+    function renderAppCards(apps) {
+
+      const container = document.getElementById('apps-grid');
+
+      container.innerHTML = apps.map(app => {
+
+        const selected = selected_apps.find(
+          a => a.name === app.app
+        );
+
+        return `
+          <div
+            class="app-card ${selected ? 'selected' : ''}"
+            id="card-${app.app}"
+            onclick="toggleAppSelection('${app.app}')"
+          >
+
+            <div class="app-check">
+              <i class="fas fa-check"></i>
+            </div>
+
+            <div class="app-card-top">
+
+              <div class="app-icon">
+                <img
+                  src="${app.image_url || '/assets/frappe/images/frappe-framework-logo.svg'}"
+                  alt="${app.title}"
+                  class="app-image"
+                />
+              </div>
+
+            </div>
+
+            <div class="app-title">
+              ${app.title || app.name}
+            </div>
+
+            <div class="app-subtitle">
+              ${app.subtitle || ''}
+            </div>
+
+            <div class="app-desc">
+              ${app.short_description || ''}
+            </div>
+
+            <div class="app-features">
+              ${(app.features || []).map(feature => `
+                <span class="app-feature">
+                  ${feature}
+                </span>
+              `).join('')}
+            </div>
+
+          </div>
+        `;
+
+      }).join('');
+    }
+
+
+    function toggleAppSelection(appId) {
+
+      console.log("Clicked:", appId);
+
+      const card = document.getElementById(`card-${appId}`);
+
+      const existingIndex = selected_apps.findIndex(
+        app => app.app === appId
+      );
+
+      // REMOVE
+      if (existingIndex !== -1) {
+
+        selected_apps.splice(existingIndex, 1);
+
+        if (card) {
+          card.classList.remove('selected');
+        }
+
+      } else {
+
+        const appData = allApps.find(
+          app => app.app === appId
+        );
+
+        if (!appData) {
+          console.error("App not found:", appId);
+          return;
+        }
+
+        selected_apps.push({
+          app: appData.app,
+          title: appData.title,
+          subtitle: appData.subtitle
+        });
+
+        if (card) {
+          card.classList.add('selected');
+        }
+      }
+
+      console.log(selected_apps);
+
+      renderTable();
+    }
+
+
+    function fillSelect(id, list, defaultVal) {
+      const el = document.getElementById(id);
+      el.innerHTML = '';
+      list.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item; option.textContent = item;
+        if (item.toLowerCase() === defaultVal.toLowerCase()) option.selected = true;
+        el.appendChild(option);
+      });
+    }
+
+    /* ── ADD APP ── */
+    function addApp() {
+      const select   = document.getElementById('app_select');
+      const app_name = select.value;
+
+      if (!app_name) {
+        showErrorToast(['Please select an application from the dropdown first.'], 'No Application Selected');
+        shakeField(select);
+        return;
+      }
+      if (selected_apps.find(a => a.app === app_name)) {
+        showErrorToast([`"${select.options[select.selectedIndex].textContent.trim()}" is already in your list.`], 'Duplicate Application');
+        shakeField(select);
+        return;
+      }
+
+      selected_apps.push({
+        app:  app_name,
+        title: select.options[select.selectedIndex].textContent
+      });
+      renderTable();
+      select.value = '';
+    }
+
+    function renderTable() {
+
+      const tbody = document.querySelector('#app-table tbody');
+
+      tbody.innerHTML = selected_apps.map((app, i) => `
+
+        <tr>
+          <td>
+            <div class="app-name-cell">
+
+              <span class="app-icon-badge">
+                <i class="fas fa-cube"></i>
+              </span>
+
+              <div>
+                <div style="font-weight:600;">
+                  ${app.title}
+                </div>
+
+                <div style="
+                  font-size:12px;
+                  color:var(--fog);
+                  margin-top:2px;
+                ">
+                  ${app.subtitle || ''}
+                </div>
+              </div>
+
+            </div>
+          </td>
+
+          <td align="right">
+            <button
+              type="button"
+              class="btn-remove"
+              onclick="removeApp(${i})"
+            >
+              Remove
+            </button>
+          </td>
+        </tr>
+
+      `).join('');
+    }
+
+    function removeApp(index) {
+      selected_apps.splice(index, 1);
+      renderTable();
+    }
+
+    /* ── SUBMIT ── */
+    async function submitForm() {
+      if (selected_apps.length === 0) {
+        showErrorToast(['Please add at least one application before submitting.'], 'No Application Selected');
+        return;
+      }
+
+      const data = {
+        company_name:     document.getElementById('company_name').value.trim(),
+        abbr:             document.getElementById('abbr').value.trim(),
+        default_currency: document.getElementById('default_currency').value,
+        country:          document.getElementById('country').value,
+        gstin:            document.getElementById('gstin').value.trim(),
+        address_line1:    document.getElementById('address_line1').value.trim(),
+        address_line2:    document.getElementById('address_line2').value.trim(),
+        city:             document.getElementById('city').value.trim(),
+        state:            document.getElementById('state').value.trim(),
+        pincode:          document.getElementById('pincode').value.trim(),
+        email:            document.getElementById('email').value.trim(),
+        user_password:    document.getElementById('user_password').value,
+        first_name:       document.getElementById('first_name').value.trim(),
+        last_name:        document.getElementById('last_name').value.trim(),
+        billing_details:  selected_apps
+      };
+
+      console.log('Submitting data:', JSON.stringify(data, null, 2));
+
+      try {
+        const res = await fetch(
+          '/api/method/quantbit_billing_platform.quantbit_billing_platform.doctype.billing_account_master.billing_account_master.create_billing_registration',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            credentials: 'omit',
+            body: 'data=' + encodeURIComponent(JSON.stringify(data))
+          }
+        );
+
+        const result = await res.json();
+        if (result.message && result.message.status === 'success') {
+          showSuccess();
+        } else {
+          showErrorToast([result.message?.message || 'Registration failed. Please try again.'], 'Submission Failed');
+        }
+      } catch (err) {
+        console.error('Submit error:', err);
+        showErrorToast(['Network error during submission. Please check your connection and try again.'], 'Submission Error');
+      }
+    }
+
+    /* ── SUCCESS OVERLAY ── */
+    function showSuccess() {
+      const overlay = document.getElementById('successOverlay');
+      overlay.classList.add('show');
+
+      let secs = 5;
+      const countEl = document.getElementById('countNum');
+
+      const ticker = setInterval(() => {
+        secs--;
+        countEl.textContent = secs;
+        if (secs <= 0) { clearInterval(ticker); window.location.href = '/login'; }
+      }, 1000);
+    }
+  </script>
+
+  <!-- SUCCESS OVERLAY -->
+  <div class="success-overlay" id="successOverlay">
+    <div class="success-card">
+      <div class="progress-ring-wrap">
+        <svg viewBox="0 0 80 80" width="80" height="80">
+          <circle class="progress-ring-bg" cx="40" cy="40" r="35"/>
+          <circle class="progress-ring-bar" id="progressRing" cx="40" cy="40" r="35"/>
+        </svg>
+        <div class="progress-ring-inner">
+          <i class="fas fa-check" style="font-size:1.8rem;color:var(--emerald);"></i>
+        </div>
+      </div>
+      <div class="success-title">Account Created!</div>
+      <p class="success-sub">
+        Your Quantbit workspace is ready.<br/>
+        <span>Welcome aboard — let's get you started.</span>
+      </p>
+      <div class="success-countdown">Redirecting to login in <b id="countNum">5</b>s</div>
+      <a href="/login" class="success-btn">
+        <i class="fas fa-sign-in-alt"></i> Go to Login
+      </a>
+    </div>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,39 @@
+#global-billing-bar {
+	background-color: #fffae6; /* Light warning yellow */
+	border-bottom: 1px solid #ffe58f;
+	height: 32px;
+	width: 100%;
+	position: fixed;
+	top: 0;
+	left: 0;
+	z-index: 1041; /* Slightly higher than Frappe Naar */
+	display: flex;
+	align-items: center;
+	font-size: 13px;
+	color: #856404;
+	overflow: hidden;
+}
+
+#global-billing-bar .container-fluid {
+	display: flex;
+	align-items: center;
+	padding-left: 15px;
+}
+
+#global-billing-bar .msg-text {
+	font-weight: 500;
+	margin-left: 10px;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	overflow: hidden;
+}
+
+/* Adjust standard navbar to sit below our custom bar */
+header .navbar {
+	top: 32px !important;
+}
+
+/* Fix for the sidebar position */
+.page-container {
+	padding-top: 32px !important;
+}

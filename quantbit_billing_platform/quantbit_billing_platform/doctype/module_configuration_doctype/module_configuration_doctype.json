@@ -1,0 +1,167 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-02-13 14:46:38.444085",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "doctype_name",
+  "section_break_dtyz",
+  "perm_select",
+  "perm_read",
+  "perm_write",
+  "column_break_nsji",
+  "perm_create",
+  "perm_delete",
+  "perm_print",
+  "perm_cancel",
+  "column_break_xove",
+  "perm_submit",
+  "perm_amend",
+  "perm_email",
+  "column_break_khsi",
+  "perm_report",
+  "perm_import",
+  "perm_export",
+  "perm_share",
+  "perm_if_owner"
+ ],
+ "fields": [
+  {
+   "fieldname": "doctype_name",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Doctype",
+   "options": "DocType"
+  },
+  {
+   "default": "0",
+   "fieldname": "perm_select",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Select"
+  },
+  {
+   "default": "0",
+   "fieldname": "perm_read",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Read"
+  },
+  {
+   "default": "0",
+   "fieldname": "perm_write",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Write"
+  },
+  {
+   "default": "0",
+   "fieldname": "perm_create",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Create"
+  },
+  {
+   "default": "0",
+   "fieldname": "perm_delete",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Delete"
+  },
+  {
+   "default": "0",
+   "fieldname": "perm_submit",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Submit"
+  },
+  {
+   "default": "0",
+   "fieldname": "perm_amend",
+   "fieldtype": "Check",
+   "label": "Amend"
+  },
+  {
+   "default": "0",
+   "fieldname": "perm_print",
+   "fieldtype": "Check",
+   "label": "Print"
+  },
+  {
+   "default": "0",
+   "fieldname": "perm_email",
+   "fieldtype": "Check",
+   "label": "Email"
+  },
+  {
+   "default": "0",
+   "fieldname": "perm_report",
+   "fieldtype": "Check",
+   "label": "Report"
+  },
+  {
+   "default": "0",
+   "fieldname": "perm_import",
+   "fieldtype": "Check",
+   "label": "Import"
+  },
+  {
+   "default": "0",
+   "fieldname": "perm_export",
+   "fieldtype": "Check",
+   "label": "Export"
+  },
+  {
+   "default": "0",
+   "fieldname": "perm_share",
+   "fieldtype": "Check",
+   "label": "Share"
+  },
+  {
+   "default": "0",
+   "fieldname": "perm_if_owner",
+   "fieldtype": "Check",
+   "label": "Only If Creator"
+  },
+  {
+   "default": "0",
+   "fieldname": "perm_cancel",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Cancel"
+  },
+  {
+   "fieldname": "section_break_dtyz",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_nsji",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_xove",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_khsi",
+   "fieldtype": "Column Break"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-02-14 16:09:30.341441",
+ "modified_by": "Administrator",
+ "module": "Quantbit Billing Platform",
+ "name": "Module Configuration Doctype",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

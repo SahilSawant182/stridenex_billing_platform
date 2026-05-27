@@ -1,0 +1,38 @@
+{
+ "allow_roles": [
+  {
+   "role": "Administrator"
+  }
+ ],
+ "creation": "2026-03-19 12:55:12.676244",
+ "docstatus": 0,
+ "doctype": "Module Onboarding",
+ "documentation_url": "https://docs.erpnext.com/docs/user/manual/en/stock",
+ "idx": 0,
+ "is_complete": 0,
+ "modified": "2026-03-19 14:40:40.034318",
+ "modified_by": "Administrator",
+ "module": "Quantbit Billing Platform",
+ "name": "Quantbit Billing App",
+ "owner": "Administrator",
+ "steps": [
+  {
+   "step": "Billing Module Configuration"
+  },
+  {
+   "step": "Billing Role"
+  },
+  {
+   "step": "Billing Package"
+  },
+  {
+   "step": "Billing Role Permission Setting"
+  },
+  {
+   "step": "Billing Acount Master"
+  }
+ ],
+ "subtitle": "Billing Package, Billing Role, Billing Role Permission Setting, Billing Module Configuration, and more.",
+ "success_message": "The Billing Module is all set up!",
+ "title": "Let's Set Up the Billing Module"
+}

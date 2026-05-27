@@ -1,0 +1,335 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:email",
+ "creation": "2026-02-14 12:32:55.171189",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "company_details_section",
+  "company_exist",
+  "company_name",
+  "abbr",
+  "default_currency",
+  "country",
+  "column_break_zpub",
+  "is_group",
+  "default_letter_head",
+  "domain",
+  "date_of_establishment",
+  "parent_company",
+  "address_html",
+  "gstin",
+  "user_detail_section",
+  "billing_user_detail",
+  "user_detail_tab",
+  "is_master_user",
+  "user_details_section",
+  "email",
+  "user_password",
+  "first_name",
+  "middle_name",
+  "last_name",
+  "column_break_rftl",
+  "full_name",
+  "username",
+  "company",
+  "column_break_tmmp",
+  "language",
+  "time_zone",
+  "send_welcome_email",
+  "unsubscribed",
+  "user_image",
+  "section_break_qwnu",
+  "billing_account_master_role_details",
+  "amended_from",
+  "tab_3_tab",
+  "billing_details"
+ ],
+ "fields": [
+  {
+   "fieldname": "company_details_section",
+   "fieldtype": "Section Break",
+   "label": "Company Details"
+  },
+  {
+   "fieldname": "company_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Company Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "abbr",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Abbr",
+   "reqd": 1
+  },
+  {
+   "fieldname": "default_currency",
+   "fieldtype": "Link",
+   "ignore_user_permissions": 1,
+   "label": "Default Currency",
+   "options": "Currency",
+   "reqd": 1
+  },
+  {
+   "fieldname": "country",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Country",
+   "options": "Country",
+   "reqd": 1
+  },
+  {
+   "bold": 1,
+   "default": "0",
+   "fieldname": "is_group",
+   "fieldtype": "Check",
+   "label": "Is Group"
+  },
+  {
+   "fieldname": "default_letter_head",
+   "fieldtype": "Link",
+   "label": "Default Letter Head",
+   "options": "Letter Head"
+  },
+  {
+   "fieldname": "column_break_zpub",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "domain",
+   "fieldtype": "Data",
+   "label": "Domain"
+  },
+  {
+   "fieldname": "date_of_establishment",
+   "fieldtype": "Data",
+   "label": "Date of Establishment"
+  },
+  {
+   "fieldname": "parent_company",
+   "fieldtype": "Link",
+   "ignore_user_permissions": 1,
+   "in_list_view": 1,
+   "label": "Parent Company",
+   "options": "Company"
+  },
+  {
+   "fieldname": "user_details_section",
+   "fieldtype": "Section Break",
+   "label": "User Details"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_master_user",
+   "fieldtype": "Check",
+   "label": "Is Master User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "label": "Email",
+   "no_copy": 1,
+   "options": "Email",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "first_name",
+   "fieldtype": "Data",
+   "label": "First Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "middle_name",
+   "fieldtype": "Data",
+   "label": "Middle Name"
+  },
+  {
+   "bold": 1,
+   "fieldname": "last_name",
+   "fieldtype": "Data",
+   "label": "Last Name"
+  },
+  {
+   "fieldname": "column_break_rftl",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "full_name",
+   "fieldtype": "Data",
+   "label": "Full Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "username",
+   "fieldtype": "Data",
+   "in_global_search": 1,
+   "in_standard_filter": 1,
+   "label": "Username",
+   "unique": 1
+  },
+  {
+   "fieldname": "language",
+   "fieldtype": "Link",
+   "label": "Language",
+   "options": "Language"
+  },
+  {
+   "fieldname": "time_zone",
+   "fieldtype": "Autocomplete",
+   "label": "Time Zone"
+  },
+  {
+   "fieldname": "column_break_tmmp",
+   "fieldtype": "Column Break"
+  },
+  {
+   "bold": 1,
+   "default": "0",
+   "depends_on": "eval:doc.__islocal",
+   "fieldname": "send_welcome_email",
+   "fieldtype": "Check",
+   "label": "Send Welcome Email"
+  },
+  {
+   "default": "0",
+   "fieldname": "unsubscribed",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Unsubscribed",
+   "no_copy": 1,
+   "show_on_timeline": 1
+  },
+  {
+   "fieldname": "user_image",
+   "fieldtype": "Attach Image",
+   "hidden": 1,
+   "label": "User Image",
+   "no_copy": 1,
+   "print_hide": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "company_exist",
+   "fieldtype": "Check",
+   "label": "Company Exist",
+   "read_only": 1
+  },
+  {
+   "fieldname": "user_password",
+   "fieldtype": "Data",
+   "label": "User Password",
+   "no_copy": 1
+  },
+  {
+   "fieldname": "user_detail_section",
+   "fieldtype": "Section Break",
+   "label": "User Detail "
+  },
+  {
+   "fieldname": "user_detail_tab",
+   "fieldtype": "Tab Break",
+   "label": "User Detail"
+  },
+  {
+   "fieldname": "billing_user_detail",
+   "fieldtype": "Table",
+   "label": "Billing User Detail",
+   "options": "Billing User Detail"
+  },
+  {
+   "fieldname": "section_break_qwnu",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "billing_account_master_role_details",
+   "fieldtype": "Table",
+   "hidden": 1,
+   "label": "Billing Account Master Role Details",
+   "options": "Billing Account Master Role Details"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Billing Account Master",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "tab_3_tab",
+   "fieldtype": "Tab Break",
+   "label": "Billing Management"
+  },
+  {
+   "fieldname": "billing_details",
+   "fieldtype": "Table",
+   "label": "Billing Details",
+   "options": "Billing Acount Billing Details"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "read_only": 1
+  },
+  {
+   "fieldname": "address_html",
+   "fieldtype": "HTML"
+  },
+  {
+   "fieldname": "gstin",
+   "fieldtype": "Data",
+   "label": "GSTIN"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-05-14 10:42:18.889291",
+ "modified_by": "Administrator",
+ "module": "Quantbit Billing Platform",
+ "name": "Billing Account Master",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Administrator",
+   "select": 1,
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

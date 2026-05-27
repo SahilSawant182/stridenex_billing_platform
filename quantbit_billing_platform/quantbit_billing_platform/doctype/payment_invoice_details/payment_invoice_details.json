@@ -1,0 +1,134 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:invoice_id",
+ "creation": "2026-04-21 14:59:07.768826",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "customer",
+  "site",
+  "package_name",
+  "package_type",
+  "column_break_ioqb",
+  "invoice_id",
+  "app_name",
+  "duration",
+  "email_id",
+  "section_break_yogb",
+  "discount_amount",
+  "column_break_fntq",
+  "total",
+  "grand_total_inr",
+  "rounding_adjustment_inr",
+  "rounded_total_inr"
+ ],
+ "fields": [
+  {
+   "fieldname": "customer",
+   "fieldtype": "Data",
+   "label": "Customer"
+  },
+  {
+   "fieldname": "site",
+   "fieldtype": "Data",
+   "label": "Site"
+  },
+  {
+   "fieldname": "package_name",
+   "fieldtype": "Data",
+   "label": "Package Name"
+  },
+  {
+   "fieldname": "package_type",
+   "fieldtype": "Data",
+   "label": "Package Type"
+  },
+  {
+   "fieldname": "column_break_ioqb",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "invoice_id",
+   "fieldtype": "Data",
+   "label": "Invoice Id",
+   "unique": 1
+  },
+  {
+   "fieldname": "app_name",
+   "fieldtype": "Data",
+   "label": "App Name"
+  },
+  {
+   "fieldname": "duration",
+   "fieldtype": "Data",
+   "label": "Duration"
+  },
+  {
+   "fieldname": "section_break_yogb",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "discount_amount",
+   "fieldtype": "Float",
+   "label": "Discount Amount"
+  },
+  {
+   "fieldname": "column_break_fntq",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total",
+   "fieldtype": "Data",
+   "label": "Total"
+  },
+  {
+   "fieldname": "grand_total_inr",
+   "fieldtype": "Float",
+   "label": "Grand Total (INR)"
+  },
+  {
+   "fieldname": "rounding_adjustment_inr",
+   "fieldtype": "Float",
+   "label": "Rounding Adjustment (INR)"
+  },
+  {
+   "fieldname": "rounded_total_inr",
+   "fieldtype": "Float",
+   "label": "Rounded Total (INR)"
+  },
+  {
+   "fieldname": "email_id",
+   "fieldtype": "Data",
+   "label": "Email ID"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-05-23 11:21:32.012934",
+ "modified_by": "Administrator",
+ "module": "Quantbit Billing Platform",
+ "name": "Payment Invoice Details",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

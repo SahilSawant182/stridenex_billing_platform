@@ -1,0 +1,74 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-02-18 16:37:03.300960",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "billing_role",
+  "doctype_name",
+  "perm_read",
+  "perm_write",
+  "perm_create",
+  "perm_delete"
+ ],
+ "fields": [
+  {
+   "fieldname": "billing_role",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Billing Role"
+  },
+  {
+   "fieldname": "doctype_name",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "DocType",
+   "options": "DocType"
+  },
+  {
+   "default": "0",
+   "fieldname": "perm_read",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Read"
+  },
+  {
+   "default": "0",
+   "fieldname": "perm_write",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Write"
+  },
+  {
+   "default": "0",
+   "fieldname": "perm_create",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Create"
+  },
+  {
+   "default": "0",
+   "fieldname": "perm_delete",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Delete"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-03-12 10:33:46.994640",
+ "modified_by": "Administrator",
+ "module": "Quantbit Billing Platform",
+ "name": "Billing Account Master Role Details",
+ "owner": "sawantsahil183@gmail.com",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

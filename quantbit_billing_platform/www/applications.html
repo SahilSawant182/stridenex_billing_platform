@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Applications - Quantbit</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        :root {
+            --primary: #5b5ef4;
+            --primary-dark: #3d3fb5;
+            --secondary: #f97316;
+            --secondary-light: #fb923c;
+            --bg-light: #f9faff;
+            --bg-darker: #0f1120;
+            --text-primary: #0f1120;
+            --text-secondary: #64748b;
+            --border-light: #e3e5f0;
+        }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg-light);
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+
+        /* NAVBAR */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 5%;
+            background: rgba(249, 250, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(227, 229, 240, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border-radius: 10px;
+            display: grid;
+            place-items: center;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 800;
+            font-size: 1.3rem;
+        }
+        .logo-text {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        nav {
+            display: flex;
+            align-items: center;
+            gap: 2.5rem;
+        }
+        nav > a, .nav-dropdown {
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        nav > a:hover, .nav-dropdown:hover {
+            color: var(--primary);
+        }
+        .nav-dropdown {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .nav-dropdown i {
+            font-size: 0.75rem;
+            transition: transform 0.3s ease;
+        }
+        .nav-dropdown.open i {
+            transform: rotate(180deg);
+        }
+
+        /* DROPDOWN MENU */
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            padding: 1.5rem 0;
+            min-width: 280px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 2000;
+            margin-top: 0.5rem;
+        }
+        .nav-dropdown.open .dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.9rem 1.5rem;
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+        .dropdown-item:hover {
+            background: var(--bg-light);
+            border-left-color: var(--primary);
+            color: var(--primary);
+            padding-left: 2rem;
+        }
+        .dropdown-item i {
+            width: 24px;
+            text-align: center;
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+        .dropdown-item-text { flex: 1; }
+        .dropdown-item-title {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .dropdown-item-desc {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 0.2rem;
+        }
+        .nav-btn {
+            padding: 0.6rem 1.8rem !important;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark)) !important;
+            color: white !important;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(91, 94, 244, 0.3);
+        }
+
+        /* BREADCRUMB */
+        .breadcrumb {
+            padding: 1.5rem 5%;
+            margin-top: 70px;
+            background: var(--bg-light);
+            border-bottom: 1px solid var(--border-light);
+        }
+        .breadcrumb-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        .breadcrumb a {
+            color: var(--primary);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        .breadcrumb a:hover {
+            color: var(--primary-dark);
+        }
+
+        /* PAGE HEADER */
+        .page-header {
+            padding: 4rem 5% 2rem;
+            background: linear-gradient(135deg, var(--bg-light) 0%, #f5f0ff 100%);
+            text-align: center;
+        }
+        .page-header h1 {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .page-header p {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* APPLICATIONS GRID */
+        .applications-section {
+            padding: 6rem 5%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .apps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 2.5rem;
+        }
+        .app-card {
+            background: white;
+            border: 2px solid var(--border-light);
+            border-radius: 20px;
+            padding: 2.5rem 2rem;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            text-decoration: none;
+            color: var(--text-primary);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        .app-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.4s ease;
+        }
+        .app-card:hover::before {
+            transform: scaleX(1);
+        }
+        .app-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-16px);
+            box-shadow: 0 32px 80px rgba(91, 94, 244, 0.15);
+        }
+        .app-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border-radius: 18px;
+            display: grid;
+            place-items: center;
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 10px 28px rgba(91, 94, 244, 0.25);
+            transition: all 0.3s ease;
+        }
+        .app-card:hover .app-icon {
+            transform: scale(1.15) rotate(-5deg);
+        }
+        .app-title {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+        .app-subtitle {
+            font-size: 0.9rem;
+            color: var(--primary);
+            font-weight: 600;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .app-description {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 2rem;
+            flex-grow: 1;
+        }
+        .app-features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .feature-tag {
+            display: inline-block;
+            padding: 0.4rem 0.9rem;
+            background: rgba(91, 94, 244, 0.1);
+            color: var(--primary);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border: 1px solid rgba(91, 94, 244, 0.2);
+        }
+        .app-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+        .app-cta i {
+            transition: transform 0.3s ease;
+        }
+        .app-card:hover .app-cta {
+            color: var(--secondary);
+            gap: 1rem;
+        }
+        .app-card:hover .app-cta i {
+            transform: translateX(4px);
+        }
+
+        /* FOOTER */
+        .main-footer {
+            padding: 4rem 5%;
+            background: var(--bg-darker);
+            color: rgba(255, 255, 255, 0.7);
+            text-align: center;
+            border-top: 1px solid rgba(227, 229, 240, 0.1);
+            margin-top: 4rem;
+        }
+        .main-footer a {
+            color: var(--primary);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        .main-footer a:hover {
+            color: var(--secondary);
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .page-header h1 { font-size: 2rem; }
+            .apps-grid { grid-template-columns: 1fr; }
+            .page-header { padding: 2rem 4%; }
+        }
+        @media (max-width: 480px) {
+            .navbar { flex-direction: column; gap: 0.8rem; padding: 0.8rem 4%; }
+            nav { width: 100%; flex-direction: column; gap: 0.5rem; }
+            .breadcrumb { padding: 1rem 4%; }
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <header class="navbar">
+        <a href="index.html" class="logo">
+            <div class="logo-icon" id="logoIcon">Q</div>
+            <span class="logo-text" id="logoText">Quantbit</span>
+        </a>
+        <nav>
+            <a href="index.html">Home</a>
+            <div class="nav-dropdown" id="appsDropdown">
+                <span>Applications</span>
+                <i class="fas fa-chevron-down"></i>
+                <div class="dropdown-menu" id="dropdownMenu">
+                    <!-- Filled dynamically -->
+                </div>
+            </div>
+            <a href="/registration" class="nav-btn">Register</a>
+        </nav>
+    </header>
+
+    <!-- BREADCRUMB -->
+    <div class="breadcrumb">
+        <div class="breadcrumb-content">
+            <a href="index.html">Home</a>
+            <span>/</span>
+            <span>Applications</span>
+        </div>
+    </div>
+
+    <!-- PAGE HEADER -->
+    <section class="page-header">
+        <h1>Our Applications</h1>
+        <p>Explore our comprehensive suite of enterprise applications designed to streamline your business operations</p>
+    </section>
+
+    <!-- APPLICATIONS GRID -->
+    <section class="applications-section">
+        <div class="apps-grid" id="appsGrid">
+            <div style="grid-column: 1/-1; text-align: center; padding: 3rem;">
+                <div style="display: inline-block; width: 50px; height: 50px; border: 4px solid rgba(91, 94, 244, 0.2); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                <p style="margin-top: 1.5rem; color: var(--text-secondary);">Loading applications...</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="main-footer">
+        <p>© 2024 Quantbit Technologies Pvt Ltd. All rights reserved.</p>
+        <div style="margin-top: 1rem; display: flex; justify-content: center; gap: 2rem; font-size: 0.9rem;">
+            <a href="#">Privacy Policy</a>
+            <a href="#">Terms of Service</a>
+            <a href="#">GDPR Compliance</a>
+        </div>
+    </footer>
+
+    <script>
+        // ────────────────────────────────────────────────
+        // Load Company Name
+        // ────────────────────────────────────────────────
+        async function loadCompanyName() {
+            try {
+                const res = await fetch('/api/resource/Company', { credentials: 'include', headers: { 'Accept': 'application/json' } });
+                if (!res.ok) throw new Error();
+                const json = await res.json();
+                let name = 'Quantbit Technologies Pvt Ltd';
+                document.getElementById('logoText').textContent = name;
+                document.getElementById('logoIcon').textContent = name.charAt(0).toUpperCase();
+            } catch {
+                console.log('Using default company name');
+            }
+        }
+
+
+        // ────────────────────────────────────────────────
+        // Load Applications Grid
+        // ────────────────────────────────────────────────
+        async function loadApplications() {
+            const grid = document.getElementById('appsGrid');
+            grid.innerHTML = `
+                <div style="grid-column: 1/-1; text-align: center; padding: 3rem;">
+                    <div style="display: inline-block; width: 50px; height: 50px; border: 4px solid rgba(91, 94, 244, 0.2); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                    <p style="margin-top: 1.5rem; color: var(--text-secondary);">Loading applications...</p>
+                </div>
+            `;
+
+            try {
+                const res = await fetch('/api/method/quantbit_billing_platform.apps.get_billing_modules', {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+                const result = await res.json();
+                let apps = [];
+                if (result.message === 'success' && Array.isArray(result.data)) {
+                    apps = result.data;
+                } else if (result.message?.message === 'success' && Array.isArray(result.message.data)) {
+                    apps = result.message.data;
+                }
+
+                if (!apps || apps.length === 0) {
+                    grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 4rem; color: #64748b;">No applications configured yet.</div>`;
+                    return;
+                }
+
+                grid.innerHTML = apps.map(app => `
+                    <a href="features.html?app=${app.app_name}" class="app-card">
+                        <div class="app-icon ${app.icon || 'fas fa-cube'}"></div>
+                        <div class="app-subtitle">${app.subtitle || 'Module'}</div>
+                        <h3 class="app-title">${app.title || app.app_name.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</h3>
+                        <p class="app-description">${(app.description || app.short_description || 'Enterprise application for modern business needs.').replace(/<[^>]+>/g, '')}</p>
+                        <div class="app-features">
+                            ${app.features?.length 
+                                ? app.features.map(f => `<span class="feature-tag">${f}</span>`).join('')
+                                : '<span class="feature-tag">Core Features</span>'}
+                        </div>
+                        <div class="app-cta">
+                            <span>Explore Features</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </a>
+                `).join('');
+
+            } catch (err) {
+                console.error('Failed to load applications:', err);
+                grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 4rem; color: #e11d48;">Could not load applications. Please try again later.</div>`;
+            }
+        }
+
+        // ────────────────────────────────────────────────
+        // Load Dropdown Menu
+        // ────────────────────────────────────────────────
+        async function initializeDropdown() {
+            const menu = document.getElementById('dropdownMenu');
+
+            try {
+                const res = await fetch('/api/method/quantbit_billing_platform.apps.get_billing_modules', {
+                    credentials: 'include',
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                const result = await res.json();
+                let apps = [];
+                if (result.message === 'success' && Array.isArray(result.data)) {
+                    apps = result.data;
+                } else if (result.message?.message === 'success' && Array.isArray(result.message.data)) {
+                    apps = result.message.data;
+                }
+
+                if (apps?.length > 0) {
+                    menu.innerHTML = apps.map(app => `
+                        <a href="applications.html?app=${app.app_name}" class="dropdown-item">
+                            <i class="${app.icon || 'fas fa-cube'}"></i>
+                            <div class="dropdown-item-text">
+                                <div class="dropdown-item-title">${app.title || app.app_name.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</div>
+                                <div class="dropdown-item-desc">${app.subtitle || app.short_description || 'Application'}</div>
+                            </div>
+                        </a>
+                    `).join('');
+                } else {
+                    menu.innerHTML = '<div style="padding:1rem; color:#64748b;">No applications found</div>';
+                }
+            } catch (err) {
+                console.error('Dropdown load error:', err);
+                menu.innerHTML = '<div style="padding:1rem; color:#e11d48;">Error loading apps</div>';
+            }
+
+            // Toggle behavior
+            const dropdown = document.getElementById('appsDropdown');
+            dropdown.addEventListener('click', function(e) {
+                if (e.target !== this && !e.target.closest('.dropdown-menu')) {
+                    this.classList.toggle('open');
+                }
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.nav-dropdown')) {
+                    dropdown.classList.remove('open');
+                }
+            });
+        }
+
+        // ────────────────────────────────────────────────
+        // Initialize on page load
+        // ────────────────────────────────────────────────
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCompanyName();
+            initializeDropdown();
+            loadApplications();
+        });
+    </script>  
+</body>
+</html>

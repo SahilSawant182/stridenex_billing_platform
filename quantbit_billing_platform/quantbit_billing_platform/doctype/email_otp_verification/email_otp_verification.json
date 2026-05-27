@@ -1,0 +1,60 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:email_id",
+ "creation": "2026-04-04 10:55:46.707823",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "email_id",
+  "otp_send",
+  "verified"
+ ],
+ "fields": [
+  {
+   "fieldname": "email_id",
+   "fieldtype": "Data",
+   "label": "Email Id",
+   "unique": 1
+  },
+  {
+   "fieldname": "otp_send",
+   "fieldtype": "Int",
+   "label": "OTP Send"
+  },
+  {
+   "default": "0",
+   "fieldname": "verified",
+   "fieldtype": "Check",
+   "label": "Verified"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-04-04 11:52:16.228860",
+ "modified_by": "Administrator",
+ "module": "Quantbit Billing Platform",
+ "name": "Email OTP Verification",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

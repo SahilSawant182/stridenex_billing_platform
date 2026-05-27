@@ -1,0 +1,121 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": ".####",
+ "creation": "2026-03-14 12:53:22.480802",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "user",
+  "role",
+  "status",
+  "column_break_ecyo",
+  "app_name",
+  "billing_package",
+  "package_id",
+  "column_break_eewq",
+  "from_date",
+  "to_date",
+  "days_left"
+ ],
+ "fields": [
+  {
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "User",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "app_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "App Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "role",
+   "fieldtype": "Link",
+   "label": "Role",
+   "options": "Role",
+   "read_only": 1
+  },
+  {
+   "fieldname": "from_date",
+   "fieldtype": "Date",
+   "label": "From Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "to_date",
+   "fieldtype": "Date",
+   "label": "To Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "\nActive\nPending\nExpired"
+  },
+  {
+   "fieldname": "billing_package",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Billing Package",
+   "options": "Billing Package",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_ecyo",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_eewq",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "package_id",
+   "fieldtype": "Data",
+   "label": "Package ID",
+   "read_only": 1
+  },
+  {
+   "fieldname": "days_left",
+   "fieldtype": "Int",
+   "label": "Days Left",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "in_create": 1,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-03-23 09:59:40.684979",
+ "modified_by": "Administrator",
+ "module": "Quantbit Billing Platform",
+ "name": "Billing Package Ledger",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

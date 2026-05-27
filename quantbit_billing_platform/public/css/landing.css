@@ -1,0 +1,828 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'DM Sans', sans-serif;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    background: #f8fafc;
+    color: #111;
+}
+
+
+
+/* NAVBAR */
+
+.navbar {
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 20px 120px;
+
+    background: white;
+
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+
+}
+
+
+/* LOGO */
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 22px;
+    font-weight: bold;
+}
+
+.logo-icon {
+    width: 40px;
+    height: 40px;
+
+    background: #4f46e5;
+
+    border-radius: 10px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: white;
+
+    font-weight: bold;
+    font-size: 20px;
+
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+}
+
+.logo-text {
+    font-weight: 700;
+    font-size: 20px;
+}
+
+
+.navbar nav a {
+
+    margin-left: 25px;
+    text-decoration: none;
+    color: #333;
+    font-size: 15px;
+
+}
+
+
+.nav-btn {
+
+    background: #4f46e5;
+    color: white !important;
+
+    padding: 10px 18px;
+    border-radius: 6px;
+
+}
+
+
+.nav-login {
+
+    border: 1px solid #4f46e5;
+    padding: 10px 18px;
+    border-radius: 6px;
+
+    color: #4f46e5 !important;
+
+}
+
+
+
+/* HERO */
+
+.hero {
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 100px 120px;
+
+}
+
+
+.hero-left {
+
+    max-width: 520px;
+
+}
+
+
+.hero-left h1 {
+
+    font-size: 74px;
+    margin-bottom: 20px;
+
+}
+
+
+.hero-left p {
+
+    font-size: 18px;
+    line-height: 1.6;
+    margin-bottom: 30px;
+
+    color: #555;
+
+}
+
+.pay-btn{
+    
+    background: #4f46e5;
+    color: white;
+
+    border: none;
+
+    padding: 14px 30px;
+
+    font-size: 16px;
+
+    border-radius: 8px;
+
+    cursor: pointer;
+}
+.hero-buttons {
+
+    display: flex;
+    gap: 15px;
+
+}
+
+
+/* BUTTONS */
+
+.primary-btn {
+
+    background: #4f46e5;
+    color: white;
+
+    border: none;
+
+    padding: 14px 30px;
+
+    font-size: 16px;
+
+    border-radius: 8px;
+
+    cursor: pointer;
+
+}
+
+
+.secondary-btn {
+
+    border: 2px solid #4f46e5;
+
+    background: white;
+
+    color: #4f46e5;
+
+    padding: 14px 30px;
+
+    font-size: 16px;
+
+    border-radius: 8px;
+
+    cursor: pointer;
+
+}
+
+
+
+/* IMAGE */
+
+.hero-right img {
+
+    width: 808px;
+    height: 380px;
+    border-radius: 12px;
+    box-shadow: 19px 20px 7px 0px rgba(0, 0, 0, 0.1);
+}
+
+
+
+/* FEATURES */
+
+.features {
+
+    padding: 80px 120px;
+
+    text-align: center;
+
+}
+
+
+.features h2 {
+
+    font-size: 34px;
+
+    margin-bottom: 50px;
+
+}
+
+
+.feature-grid {
+
+    display: grid;
+
+    grid-template-columns: repeat(4, 1fr);
+
+    gap: 25px;
+
+}
+
+
+.feature-card {
+
+    background: #e2f1f3;
+
+    padding: 30px;
+
+    border-radius: 10px;
+
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
+
+    transition: 0.3s;
+
+}
+
+
+.feature-card:hover {
+
+    transform: translateY(-5px);
+
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+
+}
+
+
+.feature-card h3 {
+
+    margin-bottom: 10px;
+
+}
+
+/* FEATURE NUMBER CIRCLE */
+
+.feature-number {
+
+    width: 50px;
+    height: 50px;
+
+    background: #a5a3cb;
+    color: white;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-weight: bold;
+    font-size: 20px;
+
+    border-radius: 50%;
+
+    margin: 0 auto 20px auto;
+
+}
+
+
+
+
+
+/* HOW IT WORKS */
+
+.how-it-works {
+
+    padding: 100px 120px;
+    background: #f8fafc;
+    text-align: center;
+
+}
+
+.how-it-works h2 {
+
+    font-size: 36px;
+    margin-bottom: 60px;
+
+}
+
+.steps-container {
+
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+
+}
+
+.step-card {
+
+    background: #e2f1f3;
+    padding: 40px;
+
+    border-radius: 12px;
+
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+
+    transition: 0.3s;
+
+}
+
+.step-card:hover {
+
+    transform: translateY(-6px);
+
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+
+}
+
+.step-number {
+
+    width: 50px;
+    height: 50px;
+
+    background: #a5a3cb;
+    color: white;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-weight: bold;
+    font-size: 20px;
+
+    border-radius: 50%;
+
+    margin: 0 auto 20px auto;
+
+}
+
+
+
+/* WHY QUANTBIT */
+
+.why-quantbit {
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #ddf6f1;
+    padding: 100px 120px;
+
+    gap: 50px;
+
+}
+
+.why-left {
+
+    max-width: 520px;
+
+}
+
+.why-left h2 {
+
+    font-size: 56px;
+    margin-bottom: 20px;
+
+}
+
+.why-left p {
+
+    color: #555;
+    margin-bottom: 25px;
+    line-height: 1.6;
+
+}
+
+.why-left ul {
+
+    list-style: none;
+
+}
+
+.why-left li {
+
+    margin-bottom: 12px;
+    font-size: 16px;
+
+}
+
+.why-right img {
+
+    width: 608px;
+    height: 450px;
+    border-radius: 12px;
+    box-shadow: 19px 20px 7px 0px rgba(0, 0, 0, 0.1);
+    margin-right: 100px;
+
+}
+
+
+
+
+
+/* FOOTER */
+
+.main-footer {
+
+    background: #0f172a;
+    color: #cbd5f5;
+    padding: 80px 120px 40px;
+
+}
+
+.footer-container {
+    max-width: 1400px;
+    margin: auto;
+}
+
+.footer-grid {
+
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 60px;
+    margin-bottom: 60px;
+
+}
+
+.footer-about p {
+
+    margin-top: 20px;
+    line-height: 1.6;
+    color: #94a3b8;
+
+}
+
+.footer-logo {
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 22px;
+    font-weight: 700;
+    color: white;
+
+}
+
+.footer-logo-icon {
+
+    width: 32px;
+    height: 32px;
+
+    background: #4f46e5;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 6px;
+
+    color: white;
+    font-weight: bold;
+
+}
+
+.footer-col h4 {
+
+    color: white;
+    margin-bottom: 20px;
+
+}
+
+.footer-col ul {
+    list-style: none;
+}
+
+.footer-col li {
+    margin-bottom: 12px;
+}
+
+.footer-col a {
+
+    text-decoration: none;
+    color: #94a3b8;
+    transition: 0.3s;
+
+}
+
+.footer-col a:hover {
+    color: white;
+}
+
+.social-icons {
+
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+
+}
+
+/* SOCIAL ICONS */
+
+.social-icons {
+    display: flex;
+    gap: 14px;
+    margin-top: 25px;
+}
+
+.social-icons a {
+
+    width: 42px;
+    height: 42px;
+
+    background: #1e293b;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    transition: 0.25s;
+
+}
+
+.social-icons a:hover {
+    background: #4f46e5;
+    transform: translateY(-2px);
+}
+
+
+/* FIX ICON SIZE */
+
+.social-icons svg {
+
+    width: 20px;
+    height: 20px;
+
+    fill: white;
+
+    display: block;
+
+}
+
+.footer-bottom {
+
+    border-top: 1px solid #1e293b;
+
+    padding-top: 25px;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    font-size: 14px;
+
+}
+
+.footer-links {
+
+    display: flex;
+    gap: 25px;
+
+}
+
+.footer-links a {
+
+    color: #94a3b8;
+    text-decoration: none;
+
+}
+
+.footer-links a:hover {
+    color: white;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+/* =================================
+   RESPONSIVE DESIGN
+================================= */
+
+
+/* ----------- LARGE LAPTOP ----------- */
+@media (max-width: 1400px) {
+
+    .navbar,
+    .hero,
+    .features,
+    .how-it-works,
+    .why-quantbit,
+    .main-footer {
+        padding-left: 60px;
+        padding-right: 60px;
+    }
+
+    .hero-right img {
+        width: 600px;
+        height: auto;
+    }
+
+    .why-right img {
+        width: 500px;
+        height: auto;
+        margin-right: 0;
+    }
+
+}
+
+
+/* ----------- TABLET ----------- */
+@media (max-width: 1024px) {
+
+    .navbar {
+        padding: 20px 40px;
+    }
+
+    .hero {
+        flex-direction: column;
+        text-align: center;
+        padding: 80px 40px;
+    }
+
+    .hero-left {
+        max-width: 100%;
+    }
+
+    .hero-left h1 {
+        font-size: 48px;
+    }
+
+    .hero-buttons {
+        justify-content: center;
+    }
+
+    .hero-right {
+        margin-top: 40px;
+    }
+
+    .hero-right img {
+        width: 100%;
+        max-width: 600px;
+    }
+
+    .feature-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .steps-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .why-quantbit {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .why-left {
+        max-width: 100%;
+    }
+
+    .why-left h2 {
+        font-size: 42px;
+    }
+
+    .why-right img {
+        width: 100%;
+        max-width: 500px;
+    }
+
+    .footer-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .footer-bottom {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+}
+
+
+/* ----------- MOBILE ----------- */
+@media (max-width: 768px) {
+
+    .navbar {
+        flex-direction: column;
+        gap: 15px;
+        padding: 20px;
+    }
+
+    .navbar nav {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .navbar nav a {
+        margin: 5px 10px;
+    }
+
+    .hero {
+        padding: 60px 20px;
+    }
+
+    .hero-left h1 {
+        font-size: 36px;
+    }
+
+    .hero-left p {
+        font-size: 16px;
+    }
+
+    .hero-buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .primary-btn,
+    .secondary-btn {
+        width: 100%;
+    }
+
+    .features {
+        padding: 60px 20px;
+    }
+
+    .feature-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .how-it-works {
+        padding: 60px 20px;
+    }
+
+    .steps-container {
+        grid-template-columns: 1fr;
+    }
+
+    .why-quantbit {
+        padding: 60px 20px;
+    }
+
+    .why-left h2 {
+        font-size: 32px;
+    }
+
+    .main-footer {
+        padding: 60px 20px 30px;
+    }
+
+    .footer-grid {
+        grid-template-columns: 1fr;
+        gap: 40px;
+    }
+
+    .footer-links {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+}
+
+
+/* ----------- SMALL MOBILE ----------- */
+@media (max-width:480px) {
+
+    .logo-text {
+        font-size: 18px;
+    }
+
+    .hero-left h1 {
+        font-size: 30px;
+    }
+
+    .hero-left p {
+        font-size: 15px;
+    }
+
+    .feature-card,
+    .step-card {
+        padding: 25px;
+    }
+
+}

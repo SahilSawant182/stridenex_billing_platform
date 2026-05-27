@@ -1,0 +1,111 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:app_name",
+ "creation": "2026-02-18 11:09:19.793163",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "app",
+  "app_name",
+  "billing_module_list",
+  "amended_from",
+  "app_subtitle",
+  "app_short_description",
+  "app_image_url",
+  "app_description",
+  "app_feature_details"
+ ],
+ "fields": [
+  {
+   "fieldname": "app",
+   "fieldtype": "Select",
+   "label": "App",
+   "reqd": 1
+  },
+  {
+   "fieldname": "billing_module_list",
+   "fieldtype": "Table",
+   "label": "Billing Module List",
+   "options": "Billing Module List"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Billing Module Configuration",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "app_subtitle",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "App Subtitle",
+   "reqd": 1
+  },
+  {
+   "fieldname": "app_short_description",
+   "fieldtype": "Small Text",
+   "in_list_view": 1,
+   "label": "App Short Description",
+   "reqd": 1
+  },
+  {
+   "fieldname": "app_image_url",
+   "fieldtype": "Attach",
+   "in_list_view": 1,
+   "label": "App Image URL",
+   "reqd": 1
+  },
+  {
+   "fieldname": "app_description",
+   "fieldtype": "Text Editor",
+   "label": "App Description",
+   "reqd": 1
+  },
+  {
+   "fieldname": "app_feature_details",
+   "fieldtype": "Table",
+   "label": "App Feature Details",
+   "options": "App Feature Details"
+  },
+  {
+   "fieldname": "app_name",
+   "fieldtype": "Data",
+   "label": "App Name",
+   "reqd": 1,
+   "unique": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-03-27 17:24:00.367444",
+ "modified_by": "Administrator",
+ "module": "Quantbit Billing Platform",
+ "name": "Billing Module Configuration",
+ "naming_rule": "By fieldname",
+ "owner": "sawantsahil183@gmail.com",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

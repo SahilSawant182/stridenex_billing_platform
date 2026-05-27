@@ -1,0 +1,68 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-03-19 16:15:48.436910",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "sys_url",
+  "current_site_url",
+  "partners_commission_rate",
+  "billing_user",
+  "billing_user_password"
+ ],
+ "fields": [
+  {
+   "fieldname": "sys_url",
+   "fieldtype": "Data",
+   "label": "Sys URL"
+  },
+  {
+   "fieldname": "current_site_url",
+   "fieldtype": "Data",
+   "label": "Current Site URL"
+  },
+  {
+   "fieldname": "partners_commission_rate",
+   "fieldtype": "Float",
+   "label": "Partner's Commission Rate"
+  },
+  {
+   "default": "billinguser@gmail.com",
+   "fieldname": "billing_user",
+   "fieldtype": "Data",
+   "label": "Billing User"
+  },
+  {
+   "default": "Admin@123",
+   "fieldname": "billing_user_password",
+   "fieldtype": "Data",
+   "label": "Billing User Password"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-05-22 13:44:11.432642",
+ "modified_by": "Administrator",
+ "module": "Quantbit Billing Platform",
+ "name": "Billing Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
