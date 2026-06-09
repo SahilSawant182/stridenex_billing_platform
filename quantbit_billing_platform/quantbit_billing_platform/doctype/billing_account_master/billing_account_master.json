@@ -12,6 +12,7 @@
   "abbr",
   "default_currency",
   "country",
+  "account_type",
   "column_break_zpub",
   "is_group",
   "default_letter_head",
@@ -20,6 +21,11 @@
   "parent_company",
   "address_html",
   "gstin",
+  "address_line1",
+  "address_line2",
+  "city",
+  "state",
+  "pincode",
   "user_detail_section",
   "billing_user_detail",
   "user_detail_tab",
@@ -33,7 +39,6 @@
   "column_break_rftl",
   "full_name",
   "username",
-  "company",
   "column_break_tmmp",
   "language",
   "time_zone",
@@ -56,31 +61,27 @@
    "fieldname": "company_name",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Company Name",
-   "reqd": 1
+   "label": "Company Name"
   },
   {
    "fieldname": "abbr",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Abbr",
-   "reqd": 1
+   "label": "Abbr"
   },
   {
    "fieldname": "default_currency",
    "fieldtype": "Link",
    "ignore_user_permissions": 1,
    "label": "Default Currency",
-   "options": "Currency",
-   "reqd": 1
+   "options": "Currency"
   },
   {
    "fieldname": "country",
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Country",
-   "options": "Country",
-   "reqd": 1
+   "options": "Country"
   },
   {
    "bold": 1,
@@ -275,13 +276,6 @@
    "options": "Billing Acount Billing Details"
   },
   {
-   "fieldname": "company",
-   "fieldtype": "Link",
-   "label": "Company",
-   "options": "Company",
-   "read_only": 1
-  },
-  {
    "fieldname": "address_html",
    "fieldtype": "HTML"
   },
@@ -289,12 +283,43 @@
    "fieldname": "gstin",
    "fieldtype": "Data",
    "label": "GSTIN"
+  },
+  {
+   "fieldname": "account_type",
+   "fieldtype": "Select",
+   "label": "Account Type",
+   "options": "Organization\nIndividual"
+  },
+  {
+   "fieldname": "city",
+   "fieldtype": "Data",
+   "label": "City"
+  },
+  {
+   "fieldname": "state",
+   "fieldtype": "Data",
+   "label": "State"
+  },
+  {
+   "fieldname": "pincode",
+   "fieldtype": "Data",
+   "label": "Pincode"
+  },
+  {
+   "fieldname": "address_line1",
+   "fieldtype": "Data",
+   "label": "Address Line 1"
+  },
+  {
+   "fieldname": "address_line2",
+   "fieldtype": "Data",
+   "label": "Address Line 2"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-05-14 10:42:18.889291",
+ "modified": "2026-06-08 15:30:34.664893",
  "modified_by": "Administrator",
  "module": "Quantbit Billing Platform",
  "name": "Billing Account Master",

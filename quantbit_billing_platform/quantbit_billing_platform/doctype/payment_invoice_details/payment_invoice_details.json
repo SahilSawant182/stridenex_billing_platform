@@ -1,7 +1,6 @@
 {
  "actions": [],
  "allow_rename": 1,
- "autoname": "field:invoice_id",
  "creation": "2026-04-21 14:59:07.768826",
  "doctype": "DocType",
  "engine": "InnoDB",
@@ -51,8 +50,7 @@
   {
    "fieldname": "invoice_id",
    "fieldtype": "Data",
-   "label": "Invoice Id",
-   "unique": 1
+   "label": "Invoice Id"
   },
   {
    "fieldname": "app_name",
@@ -106,11 +104,10 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-05-23 11:21:32.012934",
+ "modified": "2026-06-04 15:09:43.770581",
  "modified_by": "Administrator",
  "module": "Quantbit Billing Platform",
  "name": "Payment Invoice Details",
- "naming_rule": "By fieldname",
  "owner": "Administrator",
  "permissions": [
   {

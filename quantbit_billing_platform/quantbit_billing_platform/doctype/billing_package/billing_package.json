@@ -12,6 +12,7 @@
   "amount",
   "billing_role",
   "is_active",
+  "target_account_type",
   "column_break_tyoz",
   "app_name",
   "app",
@@ -23,6 +24,8 @@
   "package_type",
   "is_base_package",
   "is_user_package",
+  "section_break_xjga",
+  "table_flci",
   "section_break_pupl",
   "billing_package_token_detail",
   "amended_from"
@@ -160,12 +163,28 @@
    "fieldtype": "Int",
    "label": "Token Expiry Days",
    "mandatory_depends_on": "eval:doc.package_type == \"Token Based\";"
+  },
+  {
+   "fieldname": "target_account_type",
+   "fieldtype": "Select",
+   "label": "Target Account Type",
+   "options": "\nStudent\nMentor\nCollege\nIndustry\nAll"
+  },
+  {
+   "fieldname": "section_break_xjga",
+   "fieldtype": "Section Break",
+   "label": "Add Package Features"
+  },
+  {
+   "fieldname": "table_flci",
+   "fieldtype": "Table",
+   "options": "Package Feature"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-04-15 10:29:55.673754",
+ "modified": "2026-06-05 11:20:25.716683",
  "modified_by": "Administrator",
  "module": "Quantbit Billing Platform",
  "name": "Billing Package",

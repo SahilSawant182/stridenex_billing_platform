@@ -8,8 +8,8 @@ app_license = "mit"
 # Apps
 # ------------------
 
-on_login = "quantbit_billing_platform.quantbit_billing_platform.doctype.billing_account_master.billing_account_master.set_session_company"
-boot_session = "quantbit_billing_platform.quantbit_billing_platform.api.custom_boot_session"
+# on_login = "quantbit_billing_platform.quantbit_billing_platform.doctype.billing_account_master.billing_account_master."
+# boot_session = "quantbit_billing_platform.quantbit_billing_platform.api.custom_boot_session"
 # boot_session = "quantbit_billing_platform.quantbit_billing_platform.doctype.billing_account_master.billing_account_master.set_default_company_boot"
 
 

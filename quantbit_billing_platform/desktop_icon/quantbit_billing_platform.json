@@ -1,0 +1,20 @@
+{
+ "app": "quantbit_billing_platform",
+ "bg_color": "blue",
+ "creation": "2026-05-28 12:47:09.836280",
+ "docstatus": 0,
+ "doctype": "Desktop Icon",
+ "hidden": 0,
+ "icon_type": "Link",
+ "idx": 0,
+ "label": "Quantbit Billing Platform",
+ "link_to": "Quantbit Billing Platform",
+ "link_type": "Workspace Sidebar",
+ "modified": "2026-05-28 12:47:27.179664",
+ "modified_by": "Administrator",
+ "name": "Quantbit Billing Platform",
+ "owner": "Administrator",
+ "restrict_removal": 0,
+ "roles": [],
+ "standard": 1
+}

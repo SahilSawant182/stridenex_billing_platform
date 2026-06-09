@@ -4,7 +4,7 @@ import os
 from quantbit_billing_platform.utils import generate_random_id
 from datetime import timedelta
 from frappe.utils import today, getdate, add_days, now_datetime, get_datetime
-from quantbit_billing_platform.quantbit_billing_platform.doctype.billing_account_master.billing_account_master import set_default_company_boot
+# from quantbit_billing_platform.quantbit_billing_platform.doctype.billing_account_master.billing_account_master import set_default_company_boot
 
 @frappe.whitelist()
 def send_notification_to_user():
@@ -75,32 +75,31 @@ def send_notification_to_user():
 					will expire on <b>{expiry_datetime}</b>.
 				"""
 			}).insert(ignore_permissions=True)
-
 			frappe.db.commit()
 
 	 
 
 
-def custom_boot_session(bootinfo):
-	set_default_company_boot(bootinfo)
+# def custom_boot_session(bootinfo):
+# 	set_default_company_boot(bootinfo)
 
-	roles = []
+# 	roles = []
 
-	account = frappe.db.get_value(
-		"Billing Account Master",
-		{"email": frappe.session.user},
-		"name"
-	)
+# 	account = frappe.db.get_value(
+# 		"Billing Account Master",
+# 		{"email": frappe.session.user},
+# 		"name"
+# 	)
 
-	if account:
+# 	if account:
 
-		roles = frappe.get_all(
-			"Billing Acount Billing Details",
-			filters={"parent": account},
-			pluck="billing_role"
-		)
+# 		roles = frappe.get_all(
+# 			"Billing Acount Billing Details",
+# 			filters={"parent": account},
+# 			pluck="billing_role"
+# 		)
 
-	bootinfo.billing_roles = roles or []
+# 	bootinfo.billing_roles = roles or []
 
 
 @frappe.whitelist()
@@ -440,3 +439,141 @@ def download_payment_invoice(name):
 			message=frappe.get_traceback()
 		)
 		frappe.throw("Unable to generate invoice PDF")
+
+
+
+
+
+
+
+
+
+
+
+
+# method/quantbit_billing_platform/quantbit_billing_platform/api.get_user_packages
+
+# stridnex api
+@frappe.whitelist(allow_guest=True)
+def get_user_packages(email):
+    """
+    Returns the assigned packages for a given user email from the Billing Account Master.
+    """
+    if not frappe.db.exists("Billing Account Master", email):
+        return {"error": "Billing Account Master not found for this email."}
+
+    doc = frappe.get_doc("Billing Account Master", email)
+
+    # Extract relevant fields from the billing_details child table
+    packages = [
+        {
+            "app_name": row.app_name,
+            "billing_package": row.billing_package,
+            "package_id": row.package_id,
+            "billing_role": row.billing_role
+        }
+        for row in doc.get("billing_details", [])
+    ]
+
+    return {
+        "email": email,
+        "active_packages": packages
+    }
+
+
+#stridnex api
+
+@frappe.whitelist(allow_guest=True)
+def get_billing_packages_by_type(account_type):
+    if not account_type:
+        return {"error": "The 'account_type' parameter is required."}
+
+    raw_packages = frappe.get_all(
+        "Billing Package",
+        filters={
+            "is_active": 1,
+            "target_account_type": ["in", [account_type, "All"]]
+        },
+        fields=["name", "package_name", "amount", "package_type", "no_of_days","app_name"],
+        order_by="amount asc"
+    )
+
+    clean_packages = []
+
+    for pkg in raw_packages:
+        child_features = frappe.get_all(
+            "Package Feature",
+            filters={
+                "parent": pkg.name, 
+                "parenttype": "Billing Package"
+            },
+            fields=["feature"],
+            order_by="idx asc"
+        )
+
+        feature_list = []
+        for row in child_features:
+            if row.feature:
+                lines = [line.strip() for line in row.feature.split('\n') if line.strip()]
+                feature_list.extend(lines)
+
+        clean_packages.append({
+            "package_name": pkg.package_name,
+            "amount": pkg.amount,
+            "package_type": pkg.package_type,
+            "no_of_days": pkg.no_of_days,
+            "features": feature_list,
+			"app_name": pkg.app_name
+        }) 
+
+    return {
+        "status": "success", 
+        "data": clean_packages
+    }
+
+
+
+
+
+
+
+
+
+
+# Stridenext post to update billing package
+@frappe.whitelist(allow_guest=True)
+def update_billing_account_package(email, package_name, app_name=None, sales_invoice_name=None):
+    """
+    Dedicated endpoint called cross-site after payment.
+    Runs on the devstridenex site where Billing Account Master exists.
+    """
+    if not email or not package_name:
+        frappe.throw("Email and package_name are required")
+
+    if not frappe.db.exists("Billing Account Master", email):
+        frappe.throw(f"No Billing Account Master found for: {email}")
+
+    doc = frappe.get_doc("Billing Account Master", email)
+    
+
+    billing_details = doc.get("billing_details") or []
+    
+    if billing_details:
+        for detail in billing_details:
+            detail.billing_package = package_name	
+            if app_name:
+                detail.app_name = app_name
+    else:
+        doc.append("billing_details", {
+            "billing_package": package_name,
+            "app_name": app_name or ""
+        })
+
+    doc.last_payment_date = today()
+    if sales_invoice_name:
+        doc.last_payment_invoice = sales_invoice_name
+        
+    doc.save(ignore_permissions=True)
+    frappe.db.commit()
+    
+    return {"status": "success", "name": doc.name}

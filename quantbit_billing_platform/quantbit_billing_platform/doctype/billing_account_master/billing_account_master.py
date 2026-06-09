@@ -7,67 +7,6 @@ from frappe.utils.password import update_password
 from frappe.utils import today, add_days, date_diff
 from quantbit_billing_platform.utils import generate_random_id
 
-# Session Defoult company set on login
-def set_session_company(login_manager):
-
-	user = frappe.session.user
-
-	if user == "Guest":
-		return
-
-	company = frappe.db.get_value(
-		"Billing Account Master",
-		{"email": user},
-		"company"
-	)
-
-	if not company:
-		return
-
-	frappe.defaults.set_user_default("company", company, user)
-
-	if not frappe.db.exists(
-		"User Permission",
-		{
-			"user": user,
-			"allow": "Company",
-			"for_value": company
-		}
-	):
-		perm = frappe.get_doc({
-			"doctype": "User Permission",
-			"user": user,
-			"allow": "Company",
-			"for_value": company,
-			"apply_to_all_doctypes": 1
-		})
-		perm.insert(ignore_permissions=True)
-
-	frappe.db.commit()
-
-
-#session defoult company set on boot
-def set_default_company_boot(bootinfo):
-	user = frappe.session.user
-	if user == "Guest":
-		return
-
-	company = frappe.db.get_value(
-		"Billing Account Master",
-		{"email": user},
-		"company"
-	)
-
-	if not company:
-		return
-
-	frappe.defaults.set_user_default("company", company, user)
-
-	if "user_defaults" not in bootinfo:
-		bootinfo["user_defaults"] = {}
-
-	bootinfo["user_defaults"]["company"] = company
-
 
 class BillingAccountMaster(Document):
 
@@ -122,10 +61,10 @@ class BillingAccountMaster(Document):
 
 
 		#Validate limits
-		for app in users_per_app:
+		for app in users_per_app:                                             
 			allowed = allowed_users_per_app.get(app, 0)
 			created = users_per_app.get(app, 0)
-			if created > allowed:
+			if created > allowed:	
 				frappe.throw(
 					f"You can only create {allowed} users for app '{app}'. "
 					f"You tried to create {created} users."
@@ -139,11 +78,19 @@ class BillingAccountMaster(Document):
 		if self.is_master_user and self.billing_details:
 			for row in self.billing_details:
 				if not row.billing_package:
-					if(frappe.db.exists("Billing Package", {"is_base_package": 1, "app": row.app_name})):
-						base_package = frappe.db.get_value("Billing Package", {"is_base_package": 1, "app": row.app_name}, "name")
+					base_package = frappe.db.get_value(
+						"Billing Package", 
+						{
+							"is_base_package": 1, 
+							"app_name": row.app_name,
+							"billing_role": getattr(row, "billing_role", None)
+						}, 
+						"name"
+					)
+					if base_package:
 						row.billing_package = base_package
 					else:
-						frappe.throw(f"Please select a billing package for app {row.app_name} or create a base package for it.")
+						frappe.throw(f"Please select a billing package for app {row.app_name} or create a base package for this role.")
 
 				if row.billing_package:
 					pkg_role = frappe.db.get_value("Billing Package", row.billing_package, "billing_role")
@@ -151,8 +98,6 @@ class BillingAccountMaster(Document):
 					if not frappe.db.exists("Billing Package Ledger", {"user": self.email, "app_name": row.app_name, "billing_package": row.billing_package, "package_id": row.package_id}):
 						row.package_id = generate_random_id()
 		
-
-
 
 	def on_update(self):
 		old_doc = self.get_doc_before_save()
@@ -328,83 +273,53 @@ class BillingAccountMaster(Document):
 						active_record.save(ignore_permissions=True)
 
 
-		# Creating User Permissions
+		# # Creating User Permissions
 
-		# Company Permission	
-		company_perm = frappe.db.get_value(
-			"User Permission",
-			{"user": self.email, "allow": "Company"},
-			"name"
-		)
+		# # Company Permission	
+		# company_perm = frappe.db.get_value(
+		# 	"User Permission",
+		# 	{"user": self.email, "allow": "Company"},
+		# 	"name"
+		# )
 
-		if not company_perm:
-			doc = frappe.new_doc("User Permission")
-			doc.user = self.email
-			doc.allow = "Company"
-			doc.for_value = self.company_name
-			doc.insert(ignore_permissions=True)
+		# if not company_perm:
+		# 	doc = frappe.new_doc("User Permission")
+		# 	doc.user = self.email
+		# 	doc.allow = "Company"
+		# 	doc.for_value = self.company_name
+		# 	doc.insert(ignore_permissions=True)
 
-		else:
-			doc = frappe.get_doc("User Permission", company_perm)
-			doc.for_value = self.company_name
-			doc.save(ignore_permissions=True)
+		# else:
+		# 	doc = frappe.get_doc("User Permission", company_perm)
+		# 	doc.for_value = self.company_name
+		# 	doc.save(ignore_permissions=True)
 
 
-		# Billing Role Permissions (from child table)
-		for row in self.billing_user_detail:
-			if not row.user_role:
-				continue
+		# # Billing Role Permissions (from child table)
+		# for row in self.billing_user_detail:
+		# 	if not row.user_role:
+		# 		continue
 
-			role_perm = frappe.db.get_value(
-				"User Permission",
-				{
-					"user": row.email,
-					"allow": "Company",
-					"for_value": self.company_name
-				},
-				"name"
-			)
+		# 	role_perm = frappe.db.get_value(
+		# 		"User Permission",
+		# 		{
+		# 			"user": row.email,
+		# 			"allow": "Company",
+		# 			"for_value": self.company_name
+		# 		},
+		# 		"name"
+		# 	)
 
-			if not role_perm:
-				doc = frappe.new_doc("User Permission")
-				doc.user = row.email
-				doc.allow = "Company"
-				doc.for_value = self.company_name
-				doc.insert(ignore_permissions=True)
+		# 	if not role_perm:
+		# 		doc = frappe.new_doc("User Permission")
+		# 		doc.user = row.email
+		# 		doc.allow = "Company"
+		# 		doc.for_value = self.company_name
+		# 		doc.insert(ignore_permissions=True)
 		self.sync_users()
 
 	def sync_company(self):
-
-		if not self.company_name:
-			return
-
-		company_data = {
-			"company_name": self.company_name,
-			"abbr": self.abbr,
-			"default_currency": self.default_currency,
-			"country": self.country,
-			"is_group": self.is_group,
-			"default_letter_head": self.default_letter_head,
-			"gstin": self.gstin or None,
-			"domain": self.domain,
-			"date_of_establishment": self.date_of_establishment,
-			"parent_company": self.parent_company
-		}
-
-		if frappe.db.exists("Company", self.company_name):
-
-			frappe.db.set_value(
-				"Company",
-				self.company_name,
-				company_data,
-				update_modified=False
-			)
-
-		else:
-			frappe.log_error(
-				f"Company missing during sync: {self.company_name}",
-				"sync_company error"
-			)
+		return
 
 
   
@@ -706,328 +621,219 @@ class BillingAccountMaster(Document):
 				)
 
 
-	def on_trash(self):
-		company_perms = frappe.get_all(
-			"User Permission",
-			filters={"user": self.email, "allow": "Company"},
-			pluck="name"
-		)
-		for perm in company_perms:
-			frappe.delete_doc("User Permission", perm, ignore_permissions=True)
+	# FIX: Outdented to class level
+def on_trash(self):
+        if self.is_master_user:
+            emails_to_clear = [self.email] if self.email else []
+            if getattr(self, "account_type", "Organization") == "Organization" and self.company_name:
+                base_users = frappe.get_all("Billing Account Master", filters={"company_name": self.company_name, "is_master_user": 0}, fields=["name", "email"])
+                for base in base_users:
+                    if base.email:
+                        emails_to_clear.append(base.email)
+                    if base.email and frappe.db.exists("User", base.email):
+                        frappe.delete_doc("User", base.email, ignore_permissions=True, force=True)
+                    frappe.delete_doc("Billing Account Master", base.name, ignore_permissions=True, force=True)
 
-		billing_perms = frappe.get_all(
-			"User Permission",
-			filters={"user": self.email, "allow": "Billing Role"},
-			pluck="name"
-		)
-		for perm in billing_perms:
-			frappe.delete_doc("User Permission", perm, ignore_permissions=True)
+            if emails_to_clear:
+                active_packages = frappe.get_all("Active Package Details", filters={"user": ["in", emails_to_clear]}, pluck="name")
+                for pkg in active_packages:
+                    frappe.delete_doc("Active Package Details", pkg, ignore_permissions=True, force=True)
 
+                ledgers = frappe.get_all("Billing Package Ledger", filters={"user": ["in", emails_to_clear]}, pluck="name")
+                for ledger in ledgers:
+                    frappe.delete_doc("Billing Package Ledger", ledger, ignore_permissions=True, force=True)
 
-		if self.is_master_user:
-			
-			base_users = frappe.get_all(
-				"Billing Account Master",
-				filters={
-					"company_name": self.company_name,
-					"is_master_user": 0
-				},
-				fields=["name", "email"]
-			)
+            if self.email and frappe.db.exists("User", self.email):
+                frappe.delete_doc("User", self.email, ignore_permissions=True, force=True)
+        else:
+            if getattr(self, "account_type", "Organization") == "Organization" and self.company_name:
+                master_name = frappe.db.get_value("Billing Account Master", {"company_name": self.company_name, "is_master_user": 1}, "name")
+                if master_name:
+                    master_doc = frappe.get_doc("Billing Account Master", master_name)
+                    master_doc.flags.ignore_sync = True
+                    master_doc.billing_user_detail = [row for row in master_doc.billing_user_detail if row.email != self.email]
+                    master_doc.save(ignore_permissions=True)
 
-			emails_to_clear = [self.email] if self.email else []
+            if self.email:
+                active_packages = frappe.get_all("Active Package Details", filters={"user": self.email}, pluck="name")
+                for pkg in active_packages:
+                    frappe.delete_doc("Active Package Details", pkg, ignore_permissions=True, force=True)
+                
+                ledgers = frappe.get_all("Billing Package Ledger", filters={"user": self.email}, pluck="name")
+                for ledger in ledgers:
+                    frappe.delete_doc("Billing Package Ledger", ledger, ignore_permissions=True, force=True)
 
-			for base in base_users:
-				if base.email:
-					emails_to_clear.append(base.email)
-
-				# Delete User
-				if base.email and frappe.db.exists("User", base.email):
-					frappe.delete_doc("User", base.email, ignore_permissions=True, force=True)
-
-				# Delete Billing Account Master child record
-				frappe.delete_doc("Billing Account Master", base.name, ignore_permissions=True, force=True)
-
-
-			# Delete Active Package Details
-			if emails_to_clear:
-				active_packages = frappe.get_all(
-					"Active Package Details",
-					filters={"user": ["in", emails_to_clear]},
-					pluck="name"
-				)
-				for pkg in active_packages:
-					frappe.delete_doc("Active Package Details", pkg, ignore_permissions=True, force=True)
+            if self.email and frappe.db.exists("User", self.email):
+                is_org = getattr(self, "account_type", "Organization") == "Organization"
+                master_exists = is_org and getattr(self, "company_name", None) and frappe.db.exists("Billing Account Master", {"company_name": self.company_name, "is_master_user": 1})
+                if not master_exists:
+                    frappe.delete_doc("User", self.email, ignore_permissions=True, force=True)
 
 
-			# 🔹 DELETE BILLING PACKAGE LEDGER
-			if emails_to_clear:
-				ledgers = frappe.get_all(
-					"Billing Package Ledger",
-					filters={"user": ["in", emails_to_clear]},
-					pluck="name"
-				)
-				for ledger in ledgers:
-					frappe.delete_doc("Billing Package Ledger", ledger, ignore_permissions=True, force=True)
 
 
-			# Delete Master User
-			if self.email and frappe.db.exists("User", self.email):
-				frappe.delete_doc("User", self.email, ignore_permissions=True, force=True)
-			
-			#delete address
-			links = []
-			if self.company_name:
-				links.append(("Company", self.company_name))
-
-			if self.name:
-				links.append(("Billing Account Master", self.name))
-
-			address_names = set()
-
-			for link_doctype, link_name in links:
-				linked_addresses = frappe.get_all(
-					"Dynamic Link",
-					filters={
-						"link_doctype": link_doctype,
-						"link_name": link_name,
-						"parenttype": "Address"
-					},
-					pluck="parent"
-				)
-				address_names.update(linked_addresses)
-
-			# Delete addresses
-			for addr in address_names:
-				if frappe.db.exists("Address", addr):
-					frappe.delete_doc("Address", addr, ignore_permissions=True, force=True)
-
-			# Delete Company
-			if self.company_name and frappe.db.exists("Company", self.company_name):
-				frappe.delete_doc("Company", self.company_name, ignore_permissions=True, force=True)
 
 
-		# Base User Deletion
-		else:
-			master_name = frappe.db.get_value(
-				"Billing Account Master",
-				{
-					"company_name": self.company_name,
-					"is_master_user": 1
-				},
-				"name"
-			)
-
-			# Remove base user from Master doc's child table
-			if master_name:
-				master_doc = frappe.get_doc("Billing Account Master", master_name)
-				master_doc.flags.ignore_sync = True
-
-				master_doc.billing_user_detail = [
-					row for row in master_doc.billing_user_detail
-					if row.email != self.email
-				]
-				master_doc.save(ignore_permissions=True)
 
 
-			# Delete Active Package Details
-			if self.email:
-				active_packages = frappe.get_all(
-					"Active Package Details",
-					filters={"user": self.email},
-					pluck="name"
-				)
-				for pkg in active_packages:
-					frappe.delete_doc("Active Package Details", pkg, ignore_permissions=True, force=True)
-
-
-			if self.email:
-				ledgers = frappe.get_all(
-					"Billing Package Ledger",
-					filters={"user": self.email},
-					pluck="name"
-				)
-				for ledger in ledgers:
-					frappe.delete_doc("Billing Package Ledger", ledger, ignore_permissions=True, force=True)
-
-
-			# Delete User ONLY if master does NOT exist
-			if self.email and frappe.db.exists("User", self.email):
-
-				if not master_name:
-					frappe.delete_doc("User", self.email, ignore_permissions=True, force=True)
 
 
 @frappe.whitelist(allow_guest=True)
 def create_billing_registration():
     data = frappe.local.form_dict.get("data")
-
     if not data:
         frappe.throw("No data received in request")
 
     if isinstance(data, str):
         data = frappe.parse_json(data)
         
-    company_name = data.get("company_name")
+    account_type = data.get("account_type", "Organization")
+    role_type = data.get("role_type")
+    
+    # Individuals won't have a company name, so default to None
+    company_name = data.get("company_name") if account_type == "Organization" else None
 
     original_user = frappe.session.user
     frappe.set_user("Administrator")
 
     try:
-        if frappe.db.exists("Company", company_name):
-            company = frappe.get_doc("Company", company_name)
-        else:
-            company = frappe.new_doc("Company")
-            company.company_name = company_name
-            company.abbr = data.get("abbr")
-            company.default_currency = data.get("default_currency")
-            company.country = data.get("country")
-            
-            # Map GSTIN
-            if data.get("gstin"):
-                company.gstin = data.get("gstin") 
-                
-            company.insert(ignore_permissions=True)
-
-        #Create Billing Account Master
         doc = frappe.new_doc("Billing Account Master")
         doc.update({
-            "company_name": data.get("company_name"),
-            "abbr": data.get("abbr"),
+            "account_type": account_type,
+            "company_name": company_name,
+            "abbr": data.get("abbr") if account_type == "Organization" else None,
             "default_currency": data.get("default_currency"),
             "country": data.get("country"),
-            "gstin": data.get("gstin"),  
+            
+            # Allow GSTIN only for Organizations, default None for Individuals
+            "gstin": data.get("gstin") if account_type == "Organization" else None,
+            
             "email": data.get("email"),
             "user_password": data.get("user_password"),
             "first_name": data.get("first_name"),
             "last_name": data.get("last_name"),
+            
+            # These must match exactly with 'address_line1' in the Doctype
+            "address_line1": data.get("address_line1"),
+            "address_line2": data.get("address_line2"),
+            "city": data.get("city"),	
+            "state": data.get("state"),
+            "pincode": data.get("pincode"),
+            
             "is_master_user": 1
         })
 
-        # Append child table rows
+        # Dynamic Base Package Assignment
         for app in data.get("billing_details", []):
+            app_name = app.get("title")
+            base_package = frappe.db.get_value(
+                "Billing Package", 
+                {"is_base_package": 1, "app_name": app_name, "billing_role": role_type}, 
+                "name"
+            )
+            
+            if not base_package:
+                frappe.throw(f"No base package configured for app '{app_name}' and role '{role_type}'")
+
             doc.append("billing_details", {
-                "app_name": app.get("title")
+                "app_name": app_name, 
+                "billing_package": base_package, 
+                "billing_role": role_type
             })
 
         doc.insert(ignore_permissions=True)
-
-        if data.get("address_line1") and data.get("city"):
-            address = frappe.new_doc("Address")
-            address.update({
-                "address_title": data.get("company_name"),
-                "address_line1": data.get("address_line1"),
-                "address_line2": data.get("address_line2"),
-                "city": data.get("city"),
-                "state": data.get("state"),
-                "pincode": data.get("pincode"),
-                "country": data.get("country")
-            })
-
-            address.append("links", {
-                "link_doctype": "Company",
-                "link_name": company.name,
-                "link_title": company.company_name
-            })
-
-            address.append("links", {
-                "link_doctype": "Billing Account Master",
-                "link_name": doc.name,
-                "link_title": doc.company_name                 
-            })
-
-            address.insert(ignore_permissions=True)
-        else:
-            frappe.logger().warning(
-                f"Address skipped for {data.get('company_name')} due to missing address_line1 or city"
-            )
-
         frappe.db.commit()
+         
         return {"status": "success"}
 
     except Exception as e:
         frappe.db.rollback()
         frappe.log_error(frappe.get_traceback(), "Billing Registration Error")
         return {"status": "error", "message": str(e)}
-
     finally:
         frappe.set_user(original_user)
 
 
+
+
+
+
+
+
 @frappe.whitelist(allow_guest=True)
 def get_registration_options():
-    currencies = frappe.get_all("Currency", pluck="name", ignore_permissions=True)
-    countries = frappe.get_all("Country", pluck="name", ignore_permissions=True)
+	currencies = frappe.get_all("Currency", pluck="name", ignore_permissions=True)
+	countries = frappe.get_all("Country", pluck="name", ignore_permissions=True)
 
-    configured_apps = frappe.get_all(
-        "Billing Module Configuration", 
-        pluck="app", 
-        ignore_permissions=True
-    )
+	configured_apps = frappe.get_all(
+		"Billing Module Configuration", 
+		pluck="app", 
+		ignore_permissions=True
+	)
 
-    ignore_apps = ["frappe", "erpnext"]
-    apps = []
+	ignore_apps = ["frappe", "erpnext"]
+	apps = []
 
-    for a in configured_apps:
-        if a and a not in ignore_apps and a not in apps:
-            apps.append(a)
+	for a in configured_apps:
+		if a and a not in ignore_apps and a not in apps:
+			apps.append(a)
 
-    return {
-        "currencies": currencies,
-        "countries": countries,
-        "apps": apps
-    }
+	return {
+		"currencies": currencies,
+		"countries": countries,
+		"apps": apps
+	}
 
 
 #api for custom block for package info on dashboard 
 @frappe.whitelist(allow_guest=True)
 def get_user_package():
 
-    user = frappe.session.user
+	user = frappe.session.user
 
-    data = frappe.get_all(
-        "Billing Package Ledger",
-        filters={
-            "user": user,
-            "status": "Active"
-        },
-        fields=[
-            "app_name",
-            "billing_package",
-            "role",
-            "from_date",
-            "to_date",
-            "package_id"
-        ],
-        ignore_permissions=True 
-    )
+	data = frappe.get_all(
+		"Billing Package Ledger",
+		filters={
+			"user": user,
+			"status": "Active"
+		},
+		fields=[
+			"app_name",
+			"billing_package",
+			"role",
+			"from_date",
+			"to_date",
+			"package_id"
+		],
+		ignore_permissions=True 
+	)
 
-    for entry in data:
+	for entry in data:
 
-        # Days remaining
-        if entry.to_date:
-            entry['days_remaining'] = date_diff(entry.to_date, today())
-        else:
-            entry['days_remaining'] = 0
+		# Days remaining
+		if entry.to_date:
+			entry['days_remaining'] = date_diff(entry.to_date, today())
+		else:
+			entry['days_remaining'] = 0
 
-        package_type = frappe.db.get_value(
-            "Billing Package",
-            entry.billing_package,
-            "package_type"
-        )
+		package_type = frappe.db.get_value(
+			"Billing Package",
+			entry.billing_package,
+			"package_type"
+		)
 
-        entry["package_type"] = package_type
+		entry["package_type"] = package_type
 
-        remaining = frappe.db.get_value(
-            "Active Package Details",
-            {
-                "user": user,
-                "app_name": entry.app_name,
-                "package_id": entry.package_id
-            },
-            "remaining_tokens"
-        )
+		remaining = frappe.db.get_value(
+			"Active Package Details",
+			{
+				"user": user,
+				"app_name": entry.app_name,
+				"package_id": entry.package_id
+			},
+			"remaining_tokens"
+		)
 
-        entry["remaining_tokens"] = remaining if remaining else 0
+		entry["remaining_tokens"] = remaining if remaining else 0
 
-    return data
+	return data

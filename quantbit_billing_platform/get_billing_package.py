@@ -54,74 +54,45 @@ def get_public_package_names():
 @frappe.whitelist(allow_guest=True)
 def get_billing_account_details(email=None, company=None):
     frappe.local.flags.ignore_csrf = True
-    
+         
     filters = {"docstatus": ["!=", 2]}
     if email:
         filters["email"] = email
     if company:
-        filters["company"] = company
-    
-    
+        filters["company_name"] = company
+         
+    # Use "*" to fetch all available fields to prevent "Unknown Column" SQL crashes
+    # if some custom fields were skipped during Doctype creation.
     users = frappe.get_all(
         "Billing Account Master",
-        fields=["name", "first_name", "middle_name", "last_name", "company", "gstin", "email"],  
+        fields=["*"],
         filters=filters,
-        order_by="first_name asc"
+        order_by="modified desc"
     )
-    
+         
     result = []
-    
     for u in users:
-        company_address = ""
-        state = ""
-        city = ""
-        pincode = ""
-        addr_type = "Billing"
+        u["company"] = u.get("company_name") or ""
         
-        if u.company:
-            addresses = frappe.get_all(
-                "Address",
-                filters={"address_type": "Billing", "docstatus": ["!=", 2]},
-                fields=["name", "address_line1", "address_line2", "city", "state", "pincode", "country"]
-            )
-            
-            for addr in addresses:
-                link = frappe.get_all(
-                    "Dynamic Link",
-                    filters={
-                        "parent": addr.name,
-                        "link_doctype": "Company",
-                        "link_name": u.company
-                    },
-                    limit=1
-                )
+        # Safely extract whatever address data exists
+        add1 = u.get("address_line1") or ""
+        add2 = u.get("address_line2") or ""
+        u["company_address"] = " ".join(filter(None, [add1, add2]))
+        
+        u["state"] = u.get("state") or ""
+        u["city"] = u.get("city") or ""
+        u["pincode"] = u.get("pincode") or ""
+        u["address_type"] = "Billing"
+        u["gstin"] = u.get("gstin") or ""
+        
+        # Clean up transient structural fields before serialization
+        for field in ["address_line1", "address_line2", "company_name", "country"]:
+            if field in u:
+                del u[field]
                 
-                if link:
-                    company_address = " ".join(filter(None, [addr.address_line1, addr.address_line2]))
-                    state = addr.state or ""
-                    city = addr.city or ""
-                    pincode = addr.pincode or ""
-                    break
-        
-        
-        full_name = " ".join(filter(None, [u.first_name, u.middle_name, u.last_name]))
-    
-        
-        u["company_address"] = company_address
-        u["state"] = state
-        u["city"] = city
-        u["pincode"] = pincode
-        u["address_type"] = addr_type
-        u["gstin"] = u.gstin or ""
-        u["full_name"] = full_name  
-        
         result.append(u)
-    
-    
-    result.sort(key=lambda x: x.get('full_name', ''))
-    
+         
     return result
-
 
 
 @frappe.whitelist(allow_guest=True)
