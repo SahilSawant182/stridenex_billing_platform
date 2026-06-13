@@ -756,10 +756,6 @@ def create_billing_registration():
 
 
 
-
-
-
-
 @frappe.whitelist(allow_guest=True)
 def get_registration_options():
 	currencies = frappe.get_all("Currency", pluck="name", ignore_permissions=True)

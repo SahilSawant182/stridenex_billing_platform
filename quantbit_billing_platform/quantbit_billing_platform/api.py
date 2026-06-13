@@ -492,7 +492,9 @@ def get_billing_packages_by_type(account_type):
         "Billing Package",
         filters={
             "is_active": 1,
-            "target_account_type": ["in", [account_type, "All"]]
+            "target_account_type": ["in", [account_type, "All"]],
+			"is_base_package": 0,
+        "is_user_package": 0
         },
         fields=["name", "package_name", "amount", "package_type", "no_of_days","app_name"],
         order_by="amount asc"
