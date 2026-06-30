@@ -20,49 +20,52 @@ class BillingPackage(Document):
         if not self.is_new() and self.is_user_package:
             frappe.throw("User package cannot be updated.")
         
-        # Scope dependency checks to BOTH app and role
+        if not self.target_account_type:
+            frappe.throw("Target Account Type is required.")
+
+        # Scope dependency checks to BOTH app and target_account_type
         user_package = frappe.db.exists("Billing Package", {
             "app_name": self.app_name,
-            "billing_role": self.billing_role,   
+            "target_account_type": self.target_account_type,   
             "is_user_package": 1,
         })
 
         base_package = frappe.db.exists("Billing Package", {
             "app_name": self.app_name,
-            "billing_role": self.billing_role,
+            "target_account_type": self.target_account_type,
             "is_base_package": 1,
         })
 
         if not self.is_user_package and not self.is_base_package:
             if not user_package:
-                frappe.throw(f"User package must be created first for app '{self.app_name}' and role '{self.billing_role}'")
+                frappe.throw(f"User package must be created first for app '{self.app_name}' and target account type '{self.target_account_type}'")
 
             if not base_package:
-                frappe.throw(f"Base package must be created first for app '{self.app_name}' and role '{self.billing_role}'")
+                frappe.throw(f"Base package must be created first for app '{self.app_name}' and target account type '{self.target_account_type}'")
 
-        # Uniqueness check for User Package per role
+        # Uniqueness check for User Package per target account type
         if self.is_user_package:
             existing = frappe.db.exists("Billing Package", {
                 "app_name": self.app_name,
-                "billing_role": self.billing_role,
+                "target_account_type": self.target_account_type,
                 "is_user_package": 1,
                 "name": ["!=", self.name]
             })
 
             if existing:
-                frappe.throw(f"User package already exists for app '{self.app_name}' and role '{self.billing_role}'")
+                frappe.throw(f"User package already exists for app '{self.app_name}' and target account type '{self.target_account_type}'")
 
-        # Uniqueness check for Base Package per role
+        # Uniqueness check for Base Package per target account type
         if self.is_base_package:
             existing = frappe.db.exists("Billing Package", {
                 "app_name": self.app_name,
-                "billing_role": self.billing_role,
+                "target_account_type": self.target_account_type,
                 "is_base_package": 1,
                 "name": ["!=", self.name]
             })
 
             if existing:
-                frappe.throw(f"Base package already exists for app '{self.app_name}' and role '{self.billing_role}'")
+                frappe.throw(f"Base package already exists for app '{self.app_name}' and target account type '{self.target_account_type}'")
         
         if self.is_new():
             if not frappe.db.exists(

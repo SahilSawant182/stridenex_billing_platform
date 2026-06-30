@@ -579,3 +579,334 @@ def update_billing_account_package(email, package_name, app_name=None, sales_inv
     frappe.db.commit()
     
     return {"status": "success", "name": doc.name}
+
+
+
+
+
+
+# method/quantbit_billing_platform.quantbit_billing_platform.api.get_remaining_days
+# 
+#api for remaining days	
+@frappe.whitelist(allow_guest=True)
+def get_remaining_days(user):
+    if not user:
+        return {
+            "success": False,
+            "message": "User is required"
+        }
+
+    package = frappe.get_value(
+        "Active Package Details",
+        {"user": user},
+        ["billing_package", "from_date", "to_date"],
+        as_dict=True
+    )
+
+    if not package:
+        return {
+            "success": False,
+            "message": "No active package found"
+        }
+
+    today = getdate()
+    to_date = getdate(package.to_date)
+
+    remaining_days = (to_date - today).days
+
+    if remaining_days <= 0:
+        return {
+            "success": False,
+            "status": "Expired",
+            "message": "Package expired",
+            "remaining_days": 0
+        }
+
+    return {
+        "success": True,
+        "status": "Active",
+        "billing_package": package.billing_package,
+        "from_date": package.from_date,
+        "to_date": package.to_date,
+        "remaining_days": remaining_days
+    }
+
+
+
+
+
+
+
+
+
+# # method/quantbit_billing_platform.quantbit_billing_platform.api.allocate_package_quotas
+# # api to update the user feauture quota when the user package is updated	
+# import frappe
+
+# def allocate_package_quotas(doc, method=None):
+#     """Rebuilds the child table natively and strictly mirrors active packages."""
+#     assigned_features = {}
+
+#     # 1. Gather all features and limits from currently assigned packages
+#     if doc.get("billing_details"):
+#         for row in doc.billing_details:
+#             if not row.billing_package:
+#                 continue
+ 
+#             package_limits = frappe.get_all(
+#                 "App Feature Details",
+#                 filters={"parent": row.billing_package, "parenttype": "Billing Package"},
+#                 fields=["feature_list", "usage_limit"]
+#             )
+
+#             for limit in package_limits:
+#                 if limit.feature_list:
+#                     current_stored_limit = assigned_features.get(limit.feature_list, -1)
+#                     new_limit = limit.usage_limit or 0
+					
+                    
+#                     # Logic for merging multiple packages: 
+#                     # 0 means Unlimited. If any package grants 0, keep it 0.
+#                     # Otherwise, store the highest numerical limit.
+#                     if current_stored_limit == 0 or new_limit == 0:
+#                         assigned_features[limit.feature_list] = 0
+#                     elif new_limit > current_stored_limit:
+#                         assigned_features[limit.feature_list] = new_limit
+
+#     # 2. Extract existing usage BEFORE clearing the table so data isn't lost
+#     existing_usage = {}
+#     if doc.get("feature_quotas"):
+#         for row in doc.feature_quotas:
+#             existing_usage[row.feature] = row.used_count
+
+#     # 3. WIPE the old table completely. 
+#     # (If assigned_features is empty, it stays empty. Old limits are destroyed).
+#     doc.set("feature_quotas", [])
+
+#     # 4. Rebuild strictly with authorized features
+#     for feature_name, total_limit in assigned_features.items():
+#         doc.append("feature_quotas", {
+#             "feature": feature_name,
+#             "total_limit": total_limit,
+#             "used_count": existing_usage.get(feature_name, 0)
+#         })
+
+
+# @frappe.whitelist()
+# def consume_quota(feature_code):
+#     user_email = frappe.session.user
+    
+#     feature_name = frappe.db.get_value("Application Features", {"feature_code": feature_code}, "name")
+#     if not feature_name:
+#         frappe.throw(f"Invalid feature code: {feature_code}")
+
+#     # Atomic SQL: added `total_limit = 0` to allow infinite usage
+#     frappe.db.sql("""
+#         UPDATE `tabUser Quota Tracker`
+#         SET used_count = used_count + 1
+#         WHERE parent = %s 
+#           AND parenttype = 'Billing Account Master'
+#           AND feature = %s 
+#           AND (total_limit = 0 OR used_count < total_limit)
+#     """, (user_email, feature_name))
+    
+#     if frappe.db.sql("SELECT ROW_COUNT()")[0][0] == 0:
+#         frappe.throw("Quota exhausted or feature not allocated to your current package.")
+        
+#     frappe.db.commit()
+#     return {"status": "success", "message": "Quota consumed."}
+
+
+# @frappe.whitelist()
+# def get_user_entitlements():
+#     user_email = frappe.session.user
+    
+#     quotas = frappe.db.get_all(
+#         "User Quota Tracker",
+#         filters={"parent": user_email, "parenttype": "Billing Account Master"},
+#         fields=["feature", "total_limit", "used_count"]
+#     )
+    
+#     entitlements = {}
+#     for q in quotas:
+#         feature_code = frappe.db.get_value("Application Features", q.feature, "feature_code")
+#         if feature_code:
+#             # Format UI response so React knows if it's unlimited
+#             if q.total_limit == 0:
+#                 remaining = "Unlimited"
+#                 limit_display = "Unlimited"
+#             else:
+#                 remaining = q.total_limit - q.used_count
+#                 limit_display = q.total_limit
+                
+#             entitlements[feature_code] = {
+#                 "limit": limit_display,
+#                 "used": q.used_count,
+#                 "remaining": remaining
+#             }
+            
+#     return entitlements
+
+
+
+
+
+
+
+
+from frappe.utils import getdate, today, date_diff
+# builds
+def allocate_package_quotas(doc, method=None):
+    """Rebuilds the child table and registers reset frequencies."""
+    assigned_features = {}
+
+    # 1. Gather all features, limits, and frequencies from currently assigned packages
+    if doc.get("billing_details"):
+        for row in doc.billing_details:
+            if not row.billing_package:
+                continue
+
+            package_limits = frappe.get_all(
+                "App Feature Details",
+                filters={"parent": row.billing_package, "parenttype": "Billing Package"},
+                fields=["feature_list", "usage_limit", "reset_frequency"]
+            )
+
+            for limit in package_limits:
+                if limit.feature_list:
+                    current_data = assigned_features.get(limit.feature_list, {"limit": -1, "freq": "None"})
+                    new_limit = limit.usage_limit or 0
+                    
+                    target_limit = current_data["limit"]
+                    if target_limit == 0 or new_limit == 0:
+                        target_limit = 0
+                    elif new_limit > target_limit:
+                        target_limit = new_limit
+
+                    assigned_features[limit.feature_list] = {
+                        "limit": target_limit,
+                        "freq": limit.reset_frequency or "None"
+                    }
+
+    is_renewal = doc.get("reset_quotas")
+    existing_usage = {}
+    existing_dates = {}
+    
+    # 2. Extract existing usage BEFORE clearing the table
+    if not is_renewal and doc.get("feature_quotas"):
+        for row in doc.feature_quotas:
+            existing_usage[row.feature] = row.used_count
+            existing_dates[row.feature] = row.last_reset_date
+
+    doc.set("feature_quotas", [])
+
+    # 3. Rebuild strictly with authorized features and their reset dates
+    for feature_name, data in assigned_features.items():
+        doc.append("feature_quotas", {
+            "feature": feature_name,
+            "total_limit": data["limit"],
+            "reset_frequency": data["freq"],
+            "used_count": 0 if is_renewal else existing_usage.get(feature_name, 0),
+            "last_reset_date": today() if is_renewal or not existing_dates.get(feature_name) else existing_dates.get(feature_name)
+        })
+        
+    if is_renewal:
+        doc.reset_quotas = 0
+
+
+def evaluate_and_reset_cycles(user_email):
+    """Checks if a periodic quota needs a reset before an action occurs."""
+    quotas = frappe.db.get_all(
+        "User Quota Tracker",
+        filters={"parent": user_email, "parenttype": "Billing Account Master", "reset_frequency": ["!=", "None"]},
+        fields=["name", "reset_frequency", "last_reset_date"]
+    )
+    
+    current_date = getdate(today())
+
+    for q in quotas:
+        if not q.last_reset_date:
+            continue
+            
+        days_passed = date_diff(current_date, getdate(q.last_reset_date))
+        needs_reset = False
+
+        if q.reset_frequency == "Daily" and days_passed >= 1:
+            needs_reset = True
+        elif q.reset_frequency == "Weekly" and days_passed >= 7:
+            needs_reset = True
+        elif q.reset_frequency == "Monthly" and days_passed >= 30:
+            needs_reset = True
+
+        if needs_reset:
+            # Wipe usage and start the new cycle clock today
+            frappe.db.set_value("User Quota Tracker", q.name, {
+                "used_count": 0,
+                "last_reset_date": current_date
+            })
+    
+    frappe.db.commit()
+
+
+@frappe.whitelist()
+def consume_quota(feature_code):
+    user_email = frappe.session.user
+    
+    # Trigger the background reset check FIRST
+    evaluate_and_reset_cycles(user_email)
+    
+    feature_name = frappe.db.get_value("Application Features", {"feature_code": feature_code}, "name")
+    if not feature_name:
+        frappe.throw(f"Invalid feature code: {feature_code}")
+     
+    frappe.db.sql("""
+        UPDATE `tabUser Quota Tracker`
+        SET used_count = used_count + 1
+        WHERE parent = %s 
+          AND parenttype = 'Billing Account Master'
+          AND feature = %s 
+          AND (total_limit = 0 OR used_count < total_limit)
+    """, (user_email, feature_name))
+    
+    if frappe.db.sql("SELECT ROW_COUNT()")[0][0] == 0:
+        frappe.throw("Quota exhausted or feature not allocated to your current package.")
+        
+    frappe.db.commit()
+    return {"status": "success", "message": "Quota consumed."}
+
+
+@frappe.whitelist()
+def get_user_entitlements():
+    user_email = frappe.session.user
+    
+    # Trigger the background reset check FIRST so React gets accurate data
+    evaluate_and_reset_cycles(user_email)
+	
+    quotas = frappe.db.get_all(
+        "User Quota Tracker",
+        filters={"parent": user_email, "parenttype": "Billing Account Master"},
+        fields=["feature", "total_limit", "used_count", "reset_frequency"]
+    )
+    
+    entitlements = {}
+    for q in quotas:
+        feature_code = frappe.db.get_value("Application Features", q.feature, "feature_code")
+        if feature_code:
+            if q.total_limit == 0:
+                remaining = "Unlimited"
+                limit_display = "Unlimited"
+            else:
+                remaining = q.total_limit - q.used_count
+                limit_display = q.total_limit
+                
+            entitlements[feature_code] = {
+                "limit": limit_display,
+                "used": q.used_count,
+                "remaining": remaining,
+                "frequency": q.reset_frequency or "None"
+            }
+    return entitlements	
+
+	
+
+

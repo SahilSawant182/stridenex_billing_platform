@@ -37,6 +37,11 @@ doc_events = {
         "validate": [
             "quantbit_billing_platform.quantbit_billing_platform.doctype.billing_email_setting.billing_email_setting.handle_doc_event"
         ]
+    },
+    "Billing Account Master": {
+        "before_save": [
+            "quantbit_billing_platform.quantbit_billing_platform.api.allocate_package_quotas"
+        ]
     }
 }
 

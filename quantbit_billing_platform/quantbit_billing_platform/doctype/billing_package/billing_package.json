@@ -26,6 +26,8 @@
   "is_user_package",
   "section_break_xjga",
   "table_flci",
+  "section_break_mdir",
+  "app_feature_details",
   "section_break_pupl",
   "billing_package_token_detail",
   "amended_from"
@@ -178,13 +180,24 @@
   {
    "fieldname": "table_flci",
    "fieldtype": "Table",
+   "label": "Package Features",
    "options": "Package Feature"
+  },
+  {
+   "fieldname": "section_break_mdir",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "app_feature_details",
+   "fieldtype": "Table",
+   "label": "App Feature Details",
+   "options": "App Feature Details"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-06-05 11:20:25.716683",
+ "modified": "2026-06-17 11:51:19.230992",
  "modified_by": "Administrator",
  "module": "Quantbit Billing Platform",
  "name": "Billing Package",

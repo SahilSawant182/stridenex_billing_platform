@@ -26,6 +26,8 @@
   "city",
   "state",
   "pincode",
+  "section_break_cyuo",
+  "feature_quotas",
   "user_detail_section",
   "billing_user_detail",
   "user_detail_tab",
@@ -314,12 +316,22 @@
    "fieldname": "address_line2",
    "fieldtype": "Data",
    "label": "Address Line 2"
+  },
+  {
+   "fieldname": "section_break_cyuo",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "feature_quotas",
+   "fieldtype": "Table",
+   "label": "Feature Quotas",
+   "options": "User Quota Tracker"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-06-08 15:30:34.664893",
+ "modified": "2026-06-17 12:44:29.452730",
  "modified_by": "Administrator",
  "module": "Quantbit Billing Platform",
  "name": "Billing Account Master",

@@ -1,52 +1,68 @@
 {
  "actions": [],
  "allow_rename": 1,
- "creation": "2026-03-18 17:49:16.285931",
+ "creation": "2026-06-17 12:39:02.204044",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "feature_list",
-  "usage_limit",
-  "reset_frequency"
+  "feature",
+  "total_limit",
+  "used_count",
+  "reset_frequency",
+  "last_reset_date"
  ],
  "fields": [
   {
-   "fieldname": "feature_list",
+   "fieldname": "feature",
    "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "Feature List",
+   "label": "Feature",
    "options": "Application Features",
    "reqd": 1
   },
   {
-   "default": "0",
-   "fieldname": "usage_limit",
+   "fieldname": "total_limit",
    "fieldtype": "Int",
    "in_list_view": 1,
-   "label": "Total Limit"
+   "label": "Total Limit",
+   "reqd": 1
   },
   {
-   "default": "None",
+   "default": "0",
+   "fieldname": "used_count",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Used Count",
+   "read_only": 1
+  },
+  {
    "fieldname": "reset_frequency",
-   "fieldtype": "Select",
+   "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "Reset Frequency",
-   "options": "None\nDaily\nWeekly\nMonthly"
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_reset_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Last Reset Date"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-06-22 11:39:53.301438",
+ "modified": "2026-06-22 12:31:32.521660",
  "modified_by": "Administrator",
  "module": "Quantbit Billing Platform",
- "name": "App Feature Details",
+ "name": "User Quota Tracker",
  "owner": "Administrator",
  "permissions": [],
  "row_format": "Dynamic",
  "rows_threshold_for_grid_search": 20,
- "sort_field": "modified",
+ "sort_field": "creation",
  "sort_order": "DESC",
  "states": []
 }

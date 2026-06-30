@@ -7,6 +7,7 @@
  "engine": "InnoDB",
  "field_order": [
   "app",
+  "feature_code",
   "column_break_wdwb",
   "title"
  ],
@@ -28,12 +29,19 @@
    "in_list_view": 1,
    "label": "App",
    "reqd": 1
+  },
+  {
+   "fieldname": "feature_code",
+   "fieldtype": "Data",
+   "label": "Feature Code",
+   "reqd": 1,
+   "unique": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-05-08 11:18:23.861595",
+ "modified": "2026-06-17 10:54:10.488748",
  "modified_by": "Administrator",
  "module": "Quantbit Billing Platform",
  "name": "Application Features",
