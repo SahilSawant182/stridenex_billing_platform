@@ -910,3 +910,361 @@ def get_user_entitlements():
 	
 
 
+@frappe.whitelist(allow_guest=True)
+def create_subscription_history(**kwargs):
+
+    if not frappe.session.user or frappe.session.user == "Guest":
+        frappe.throw("Authentication required", frappe.AuthenticationError)
+
+    data = kwargs or frappe.request.json or {}
+
+    sales_invoice_no = data.get("sales_invoice_no") or ""
+    customer_email   = data.get("customer_email") or ""
+    if not sales_invoice_no:
+        frappe.throw("sales_invoice_no is required")
+
+    if not customer_email:
+        frappe.throw("customer_email is required")
+
+    # ---- Idempotent duplicate check ----
+    existing = frappe.db.get_value(
+        "Subscription History",
+        {"sales_invoice_no": sales_invoice_no},
+        "name"
+    )
+
+    if existing:
+        frappe.log_error(
+            title="Subscription History - Duplicate Skipped",
+            message={
+                "sales_invoice_no": sales_invoice_no,
+                "existing_record": existing
+            }
+        )
+        return {
+            "status": "success",
+            "message": "Subscription History already exists",
+            "name": existing,
+            "created": False
+        }
+
+    # ---- expiry_date calculation ----
+    from frappe.utils import getdate, add_days, today as frappe_today
+
+    raw_purchase_date = data.get("purchase_date")
+    try:
+        purchase_date = getdate(raw_purchase_date) if raw_purchase_date else getdate(frappe_today())
+    except Exception:
+        purchase_date = getdate(frappe_today())
+
+    duration = 0
+    try:
+        duration = int(data.get("duration") or 0)
+    except (ValueError, TypeError):
+        duration = 0
+
+    expiry_date = add_days(purchase_date, duration) if duration > 0 else None
+
+    # ---- Enforce single active subscription per customer ----
+    # Deactivate ALL currently active records for this customer in one bulk
+    # operation so there is never more than one active subscription at a time.
+    previously_active = frappe.get_all(
+        "Subscription History",
+        filters={"customer_email": customer_email, "is_active": 1},
+        pluck="name",
+    )
+
+    if previously_active:
+        frappe.db.set_value(
+            "Subscription History",
+            {"customer_email": customer_email, "is_active": 1},
+            "is_active",
+            0,
+            update_modified=False,
+        )
+        frappe.log_error(
+            title="Subscription History - Previous Subscriptions Deactivated",
+            message={
+                "customer_email": customer_email,
+                "deactivated_records": previously_active,
+                "deactivated_count": len(previously_active),
+            },
+        )
+
+    # ---- Insert new Subscription History (always active) ----
+    doc = frappe.new_doc("Subscription History")
+
+    doc.customer_email      = customer_email
+    doc.customer_name       = data.get("customer_name") or ""
+    doc.package_name        = data.get("package_name") or ""
+    doc.package_type        = data.get("package_type") or ""
+    doc.app_name            = data.get("app_name") or ""
+    doc.duration            = duration
+    doc.amount              = data.get("amount") or 0
+    doc.currency            = data.get("currency") or "INR"
+    doc.discount            = data.get("discount") or 0
+    doc.payment_status      = data.get("payment_status") or "Paid"
+    doc.purchase_date       = purchase_date
+    doc.expiry_date         = expiry_date
+    doc.is_active           = 1
+    doc.sales_invoice_no    = sales_invoice_no
+    doc.payment_entry_no    = data.get("payment_entry_no") or ""
+    doc.razorpay_payment_id = data.get("razorpay_payment_id") or ""
+    doc.site                = data.get("site") or ""
+
+    doc.insert(ignore_permissions=True)
+    frappe.db.commit()
+
+    frappe.log_error(
+        title="Subscription History Inserted",
+        message={
+            "name": doc.name,
+            "sales_invoice_no": sales_invoice_no,
+            "customer_email": customer_email,
+            "purchase_date": str(purchase_date),
+            "expiry_date": str(expiry_date) if expiry_date else None,
+            "duration": duration
+        }
+    )
+
+    return {
+        "status": "success",
+        "message": "Subscription History created successfully",
+        "name": doc.name,
+        "created": True,
+        "expiry_date": str(expiry_date) if expiry_date else None
+    }
+
+
+# ---------------------------------------------------------------------------
+# Subscription Dashboard API
+# ---------------------------------------------------------------------------
+# Single endpoint for the Next.js frontend — returns everything it needs
+# about the logged-in user's subscriptions in one call.
+#
+# Response shape:
+# {
+#     "status": "success",
+#     "summary": { ... },
+#     "active_subscription": { ... } | null,
+#     "history": [ ... ]
+# }
+# ---------------------------------------------------------------------------
+
+# Fields we expose publicly — never leak internal Frappe meta columns.
+_HISTORY_FIELDS = [
+    "name",
+    "package_name",
+    "package_type",
+    "app_name",
+    "amount",
+    "discount",
+    "currency",
+    "payment_status",
+    "purchase_date",
+    "expiry_date",
+    "is_active",
+    "sales_invoice_no",
+]
+
+
+def _build_empty_dashboard():
+    """Return the canonical empty-state response when a user has no history."""
+    return {
+        "status": "success",
+        "summary": {
+            "total_spent": 0,
+            "total_purchases": 0,
+            "active_subscription": False,
+        },
+        "active_subscription": None,
+        "history": [],
+    }
+
+
+def _pick_active(records):
+    """
+    Given a list of Subscription History records, return the single active one.
+
+    Rules:
+    - Prefer records where is_active == 1.
+    - If multiple active records exist (legacy data), return the newest by
+      purchase_date (ties broken by name desc which is creation-order).
+    - Returns None when no active record exists.
+    """
+    active_records = [r for r in records if r.get("is_active")]
+    if not active_records:
+        return None
+
+    # Sort newest-first: primary by purchase_date, secondary by name (creation order)
+    active_records.sort(
+        key=lambda r: (
+            str(r.get("purchase_date") or ""),
+            r.get("name") or "",
+        ),
+        reverse=True,
+    )
+    return active_records[0]
+
+
+def _build_summary(records, active):
+    """
+    Compute the summary block from the full history list and the active record.
+
+    total_spent  = sum of `amount` where payment_status == "Paid"
+    total_purchases = total number of records (regardless of status)
+    """
+    total_spent = sum(
+        float(r.get("amount") or 0)
+        for r in records
+        if r.get("payment_status") == "Paid"
+    )
+
+    summary = {
+        "total_spent": total_spent,
+        "total_purchases": len(records),
+        "active_subscription": bool(active),
+    }
+
+    if active:
+        summary["current_package"]      = active.get("package_name")
+        summary["current_package_type"] = active.get("package_type")
+        summary["next_expiry"]          = str(active["expiry_date"]) if active.get("expiry_date") else None
+
+    return summary
+
+
+def _format_history_item(record):
+    """
+    Return a clean dict with only the fields the frontend needs.
+    Converts date objects to ISO strings so JSON serialisation never fails.
+    """
+    return {
+        "name":             record.get("name"),
+        "package_name":     record.get("package_name"),
+        "package_type":     record.get("package_type"),
+        "app_name":         record.get("app_name"),
+        "amount":           float(record.get("amount") or 0),
+        "discount":         float(record.get("discount") or 0),
+        "currency":         record.get("currency") or "INR",
+        "payment_status":   record.get("payment_status"),
+        "purchase_date":    str(record["purchase_date"]) if record.get("purchase_date") else None,
+        "expiry_date":      str(record["expiry_date"]) if record.get("expiry_date") else None,
+        "is_active":        bool(record.get("is_active")),
+        "sales_invoice_no": record.get("sales_invoice_no"),
+    }
+
+
+@frappe.whitelist()
+def get_user_subscription_dashboard():
+    """
+    Dashboard API — returns subscription summary, active subscription, and
+    full purchase history for the currently authenticated user.
+
+    Authentication: Uses frappe.session.user — the frontend must NOT pass an
+    email.  The user must be logged in; Guests receive a 403.
+
+    Performance:
+    - Single frappe.get_all() call — no N+1 queries.
+    - Only the fields in _HISTORY_FIELDS are fetched from the database.
+    - No frappe.get_doc() usage.
+    """
+
+    # ---- Resolve the authenticated user's email --------------------------------
+    email = frappe.session.user
+
+    # Block unauthenticated / guest access
+    if not email or email == "Guest":
+        frappe.throw("Authentication required to access subscription data.", frappe.AuthenticationError)
+
+    # ---- Fetch all subscription history for this user --------------------------
+    # Single query — newest purchases first so `history` is already sorted.
+    records = frappe.get_all(
+        "Subscription History",
+        filters={"customer_email": email},
+        fields=_HISTORY_FIELDS,
+        order_by="purchase_date desc, name desc",
+    )
+
+    # ---- Empty state -----------------------------------------------------------
+    if not records:
+        return _build_empty_dashboard()
+
+    # ---- Derive active subscription and summary --------------------------------
+    active_raw  = _pick_active(records)
+    active      = _format_history_item(active_raw) if active_raw else None
+    summary     = _build_summary(records, active_raw)
+
+    # ---- Format history --------------------------------------------------------
+    history = [_format_history_item(r) for r in records]
+
+    return {
+        "status":              "success",
+        "summary":             summary,
+        "active_subscription": active,
+        "history":             history,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Scheduled Job – Daily Subscription Expiry
+# ---------------------------------------------------------------------------
+# Runs once per day (registered in hooks.py under scheduler_events["daily"]).
+# Finds every Subscription History record where:
+#   - is_active == 1
+#   - expiry_date is set AND expiry_date < today()
+# and sets is_active = 0.
+#
+# Idempotent: running multiple times has no additional effect.
+# Records are never deleted — only deactivated.
+# ---------------------------------------------------------------------------
+
+def expire_subscription_history():
+    """
+    Daily scheduler: automatically deactivate subscriptions whose expiry date
+    has passed.
+
+    Logic:
+        expiry_date < today()  AND  is_active == 1  →  set is_active = 0
+    """
+    today_date = getdate(today())
+
+    # Fetch only names to avoid loading full documents.
+    expired = frappe.get_all(
+        "Subscription History",
+        filters={
+            "is_active": 1,
+            "expiry_date": ["<", today_date],
+        },
+        pluck="name",
+    )
+
+    if not expired:
+        # Nothing to do — log is omitted intentionally to keep Error Log clean.
+        return
+
+    # Bulk update in one SQL statement — no loops, no N+1.
+    try:
+        frappe.db.set_value(
+            "Subscription History",
+            {"is_active": 1, "expiry_date": ["<", today_date]},
+            "is_active",
+            0,
+            update_modified=False,
+        )
+        frappe.db.commit()
+
+        frappe.log_error(
+            title="Subscription Expiry Scheduler - Completed",
+            message={
+                "expired_count": len(expired),
+                "expired_records": expired,
+                "run_date": str(today_date),
+            },
+        )
+
+    except Exception:
+        frappe.log_error(
+            title="Subscription Expiry Scheduler - Error",
+            message=frappe.get_traceback(),
+        )
