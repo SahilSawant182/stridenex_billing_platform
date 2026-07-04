@@ -1068,17 +1068,74 @@ _HISTORY_FIELDS = [
 ]
 
 
-def _build_empty_dashboard():
-    """Return the canonical empty-state response when a user has no history."""
+def _get_current_running_package(email):
+    """
+    Fetch the user's currently running package from Active Package Details.
+
+    This covers base packages and user (free) packages that are assigned during
+    onboarding or as a fallback — they never appear in Subscription History.
+
+    Returns a clean dict or None if no record exists.
+    """
+    pkg = frappe.db.get_value(
+        "Active Package Details",
+        {"user": email},
+        [
+            "name",
+            "billing_package",
+            "app_name",
+            "package_type",
+            "from_date",
+            "to_date",
+            "package_id",
+            "remaining_tokens",
+            "total_tokens",
+        ],
+        as_dict=True,
+    )
+
+    if not pkg:
+        return None
+
+    # Resolve the human-readable package name from the Billing Package doctype.
+    package_name = frappe.db.get_value(
+        "Billing Package", pkg.billing_package, "package_name"
+    ) or pkg.billing_package
+
     return {
-        "status": "success",
-        "summary": {
-            "total_spent": 0,
-            "total_purchases": 0,
-            "active_subscription": False,
-        },
+        "billing_package":  pkg.billing_package,
+        "package_name":     package_name,
+        "package_type":     pkg.package_type,
+        "app_name":         pkg.app_name,
+        "from_date":        str(pkg.from_date) if pkg.from_date else None,
+        "to_date":          str(pkg.to_date) if pkg.to_date else None,
+        "package_id":       pkg.package_id,
+        "remaining_tokens": pkg.remaining_tokens,
+        "total_tokens":     pkg.total_tokens,
+        "source":           "active_package",   # lets the frontend know this is a free/base plan
+    }
+
+
+def _build_empty_dashboard(current_plan=None):
+    """Return the canonical empty-state response when a user has no paid history."""
+    summary = {
+        "total_spent": 0,
+        "total_purchases": 0,
+        "active_subscription": False,
+    }
+
+    # Even with no purchase history the user may be on a base/free plan.
+    if current_plan:
+        summary["current_package"]      = current_plan.get("package_name")
+        summary["current_package_type"] = current_plan.get("package_type")
+        summary["next_expiry"]          = current_plan.get("to_date")
+
+    return {
+        "status":              "success",
+        "summary":             summary,
         "active_subscription": None,
-        "history": [],
+        "current_plan":        current_plan,   # base/user/free package from Active Package Details
+        "history":             [],
     }
 
 
@@ -1107,12 +1164,15 @@ def _pick_active(records):
     return active_records[0]
 
 
-def _build_summary(records, active):
+def _build_summary(records, current_plan=None):
     """
     Compute the summary block from the full history list and the active record.
 
-    total_spent  = sum of `amount` where payment_status == "Paid"
+    total_spent     = sum of `amount` where payment_status == "Paid"
     total_purchases = total number of records (regardless of status)
+
+    current_package / next_expiry / active_subscription:
+      Always shown from the Active Package Details (current_plan).
     """
     total_spent = sum(
         float(r.get("amount") or 0)
@@ -1123,13 +1183,13 @@ def _build_summary(records, active):
     summary = {
         "total_spent": total_spent,
         "total_purchases": len(records),
-        "active_subscription": bool(active),
+        "active_subscription": bool(current_plan),
     }
 
-    if active:
-        summary["current_package"]      = active.get("package_name")
-        summary["current_package_type"] = active.get("package_type")
-        summary["next_expiry"]          = str(active["expiry_date"]) if active.get("expiry_date") else None
+    if current_plan:
+        summary["current_package"]      = current_plan.get("package_name")
+        summary["current_package_type"] = current_plan.get("package_type")
+        summary["next_expiry"]          = current_plan.get("to_date")
 
     return summary
 
@@ -1158,16 +1218,20 @@ def _format_history_item(record):
 @frappe.whitelist()
 def get_user_subscription_dashboard():
     """
-    Dashboard API — returns subscription summary, active subscription, and
-    full purchase history for the currently authenticated user.
+    Dashboard API — returns subscription summary, active subscription, current
+    running plan, and full purchase history for the authenticated user.
 
     Authentication: Uses frappe.session.user — the frontend must NOT pass an
     email.  The user must be logged in; Guests receive a 403.
 
+    Data sources:
+    - Subscription History  → paid purchases (history only)
+    - Active Package Details → currently running plan (current_plan + active_subscription)
+      This covers base/free packages assigned during onboarding that never
+      appear in Subscription History.
+
     Performance:
-    - Single frappe.get_all() call — no N+1 queries.
-    - Only the fields in _HISTORY_FIELDS are fetched from the database.
-    - No frappe.get_doc() usage.
+    - Two lightweight queries — no N+1, no frappe.get_doc() in loops.
     """
 
     # ---- Resolve the authenticated user's email --------------------------------
@@ -1177,8 +1241,12 @@ def get_user_subscription_dashboard():
     if not email or email == "Guest":
         frappe.throw("Authentication required to access subscription data.", frappe.AuthenticationError)
 
-    # ---- Fetch all subscription history for this user --------------------------
-    # Single query — newest purchases first so `history` is already sorted.
+    # ---- Query 1: currently running package (base / free / paid) ---------------
+    # Always fetch this regardless of purchase history so the frontend always
+    # knows what plan the user is actually running right now.
+    current_plan = _get_current_running_package(email)
+
+    # ---- Query 2: full paid purchase history -----------------------------------
     records = frappe.get_all(
         "Subscription History",
         filters={"customer_email": email},
@@ -1186,14 +1254,12 @@ def get_user_subscription_dashboard():
         order_by="purchase_date desc, name desc",
     )
 
-    # ---- Empty state -----------------------------------------------------------
+    # ---- Empty state (no paid history) -----------------------------------------
     if not records:
-        return _build_empty_dashboard()
+        return _build_empty_dashboard(current_plan=current_plan)
 
-    # ---- Derive active subscription and summary --------------------------------
-    active_raw  = _pick_active(records)
-    active      = _format_history_item(active_raw) if active_raw else None
-    summary     = _build_summary(records, active_raw)
+    # ---- Derive summary --------------------------------------------------------
+    summary     = _build_summary(records, current_plan=current_plan)
 
     # ---- Format history --------------------------------------------------------
     history = [_format_history_item(r) for r in records]
@@ -1201,7 +1267,8 @@ def get_user_subscription_dashboard():
     return {
         "status":              "success",
         "summary":             summary,
-        "active_subscription": active,
+        "active_subscription": current_plan,    # always from active package details
+        "current_plan":        current_plan,    # always from active package details
         "history":             history,
     }
 
