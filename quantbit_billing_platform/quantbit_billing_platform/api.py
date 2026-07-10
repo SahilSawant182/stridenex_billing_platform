@@ -1335,3 +1335,402 @@ def expire_subscription_history():
             title="Subscription Expiry Scheduler - Error",
             message=frappe.get_traceback(),
         )
+
+@frappe.whitelist(allow_guest=True)
+def initiate_session_booking(payload):
+	if isinstance(payload, str):
+		data = json.loads(payload)
+	else:
+		data = payload
+
+	student = data.get("student")
+	mentor = data.get("mentor")
+	offering = data.get("offering")
+	offering_type = data.get("offering_type")
+	session_date = data.get("session_date")
+	from_time = data.get("from_time")
+	to_time = data.get("to_time")
+	topic = data.get("topic")
+	amount = float(data.get("amount", 0))
+
+	# Create a new Mentor Session Booking document
+	doc = frappe.get_doc({
+		"doctype": "Mentor Session Booking",
+		"student": student,
+		"mentor": mentor,
+		"offering": offering,
+		"offering_type": offering_type,
+		"session_date": session_date,
+		"from_time": from_time,
+		"to_time": to_time,
+		"topic": topic,
+		"amount_paid": amount,
+		"status": "Payment Pending"
+	})  
+
+	# Insert the document safely, ignoring permissions as this is a guest endpoint
+	doc.insert(ignore_permissions=True)
+
+	if amount <= 0:
+		doc.status = "Pending"
+		doc.save(ignore_permissions=True)
+
+		# Create Subscription History for free session
+		_create_session_subscription_history(doc, razorpay_payment_id="Free Session")
+
+		return {
+			"payment_required": False,
+			"booking_id": doc.name
+		}
+
+	# For amount > 0, generate Razorpay order
+	from payments.utils import get_payment_gateway_controller
+	try:
+		controller = get_payment_gateway_controller("Razorpay")
+		controller.init_client()
+	except Exception as e:
+		frappe.delete_doc("Mentor Session Booking", doc.name, ignore_permissions=True, force=True)
+		frappe.db.commit()
+		frappe.throw(_("Payment gateway configuration error: {0}").format(str(e)))
+
+	try:
+		amount_in_paise = int(amount * 100)
+		order_payload = {
+			"amount": amount_in_paise,
+			"currency": "INR",
+			"receipt": doc.name
+		}
+		order = controller.client.order.create(data=order_payload)
+		order_id = order.get("id")
+	except Exception as e:
+		frappe.delete_doc("Mentor Session Booking", doc.name, ignore_permissions=True, force=True)
+		frappe.db.commit()
+		frappe.throw(_("Razorpay order creation failed: {0}").format(str(e)))
+
+	return {
+		"payment_required": True,
+		"order_id": order_id,
+		"api_key": controller.api_key,
+		"amount": amount,
+		"booking_id": doc.name
+	}
+
+
+@frappe.whitelist(allow_guest=True)
+def verify_session_payment(booking_id, razorpay_payment_id, razorpay_order_id, razorpay_signature):
+	from payments.utils import get_payment_gateway_controller
+	try:
+		controller = get_payment_gateway_controller("Razorpay")
+		controller.init_client()
+	except Exception as e:
+		frappe.throw(_("Payment gateway configuration error: {0}").format(str(e)))
+
+	try:
+		controller.client.utility.verify_payment_signature({
+			"razorpay_order_id": razorpay_order_id,
+			"razorpay_payment_id": razorpay_payment_id,
+			"razorpay_signature": razorpay_signature
+		})
+	except Exception as e:
+		frappe.throw(_("Payment verification failed: Signature mismatch or invalid payment. {0}").format(str(e)))
+
+	try:
+		doc = frappe.get_doc("Mentor Session Booking", booking_id)
+	except Exception:
+		frappe.throw(_("Mentor Session Booking {0} not found.").format(booking_id))
+
+	if doc.status != "Payment Pending":
+		frappe.throw(_("Invalid booking status: {0}").format(doc.status))
+
+	doc.status = "Pending"
+	doc.payment_reference = razorpay_payment_id
+	doc.save(ignore_permissions=True)
+
+	# Create Subscription History for paid session (non-blocking)
+	_create_session_subscription_history(doc, razorpay_payment_id=razorpay_payment_id)
+
+	return {
+		"success": True,
+		"message": "Payment verified successfully.",
+		"booking_id": doc.name
+	}
+
+def _create_session_subscription_history(doc, razorpay_payment_id):
+	"""
+	Helper: create a Subscription History entry after a Mentor Session Booking
+	is confirmed (paid or free). Wrapped in try/except so any failure is only
+	logged — it must never break the user-facing response.
+	"""
+	try:
+		from frappe.utils import today, get_url
+
+		# Resolve customer name from the User doctype
+		customer_name = frappe.db.get_value("User", doc.student, "full_name") or doc.student
+
+		# Use topic as the package name, fallback to offering
+		package_name = doc.topic or doc.offering or "Session Booking"
+
+		subscription_history = frappe.get_doc({
+			"doctype": "Subscription History",
+			"customer_email": doc.student,
+			"customer_name": customer_name,
+			"package_name": package_name,
+			"package_type": doc.offering_type or "Session Booking",
+			"app_name": "Stridenex App",
+			"duration": doc.duration or 0,
+			"amount": doc.amount_paid or 0,
+			"currency": "INR",
+			"discount": 0,
+			"payment_status": "Paid",
+			"purchase_date": today(),
+			"expiry_date": doc.session_date,
+			"razorpay_payment_id": razorpay_payment_id,
+			"site": get_url(),
+			"is_active": 1,
+		})
+		subscription_history.insert(ignore_permissions=True)
+		frappe.db.commit()
+
+	except Exception:
+		frappe.log_error(
+			title="Session Booking - Subscription History Creation Failed",
+			message=frappe.get_traceback()
+		)
+
+
+def cleanup_abandoned_bookings():
+	from frappe.utils import now_datetime
+	from datetime import timedelta
+
+	cutoff_time = now_datetime() - timedelta(minutes=15)
+
+	abandoned_bookings = frappe.get_all(
+		"Mentor Session Booking",
+		filters={
+			"status": "Payment Pending",
+			"creation": ["<", cutoff_time]
+		},   
+		pluck="name"
+	)
+
+	for booking in abandoned_bookings:
+		try:
+			frappe.delete_doc("Mentor Session Booking", booking, ignore_permissions=True, force=True)
+			frappe.db.commit()
+		except Exception as e:
+			frappe.log_error(f"Failed to delete abandoned booking {booking}: {str(e)}", "Cleanup Abandoned Bookings")
+
+
+def generate_monthly_payouts():
+	"""
+	Scheduled task: runs on the 1st of every month (configured in hooks.py).
+
+	For each mentor who has Completed + Unpaid bookings in the previous calendar
+	month, it:
+	  1. Aggregates gross amount and session count.
+	  2. Applies a tiered commission rate.
+	  3. Creates a Mentor Payout document (status = "Processing").
+	  4. Stamps all processed bookings with payout_status = "Processing" and
+	     a back-link to the new payout document.
+
+	Each mentor is committed separately so one failure does NOT roll back others.
+	"""
+	import calendar
+	from frappe.utils import getdate, today
+
+	today_date = getdate(today())
+
+	# Guard: only run on the 1st of the month
+	if today_date.day != 1:
+		return
+
+	# Determine the previous month's date range
+	first_of_this_month = today_date.replace(day=1)
+	last_of_prev_month = first_of_this_month - timedelta(days=1)
+	first_of_prev_month = last_of_prev_month.replace(day=1)
+
+	month_year_label = last_of_prev_month.strftime("%B %Y")   # e.g. "February 2025"
+
+	# Fetch all completed + unpaid bookings in the previous month
+	bookings = frappe.get_all(
+		"Mentor Session Booking",
+		filters={
+			"status": "Completed",
+			"payout_status": "Unpaid",
+			"session_date": ["between", [str(first_of_prev_month), str(last_of_prev_month)]]
+		},
+		fields=["name", "mentor", "amount_paid"],
+	)
+
+	if not bookings:
+		return
+
+	# Group by mentor
+	mentor_map = {}
+	for b in bookings:
+		mentor = b.mentor
+		if not mentor:
+			continue
+		if mentor not in mentor_map:
+			mentor_map[mentor] = {"sessions": [], "gross": 0.0, "count": 0}
+		mentor_map[mentor]["sessions"].append(b.name)
+		mentor_map[mentor]["gross"] += float(b.amount_paid or 0)
+		mentor_map[mentor]["count"] += 1
+
+	# Process each mentor independently
+	for mentor, data in mentor_map.items():
+		try:
+			gross = data["gross"]
+			count = data["count"]
+			session_names = data["sessions"]
+
+			# Tiered commission rate
+			if gross <= 50000:
+				rate = 0.15
+			elif gross <= 100000:
+				rate = 0.12
+			else:
+				rate = 0.10
+
+			commission_amount = round(gross * rate, 2)
+			net_payout = round(gross - commission_amount, 2)
+
+			# Create Mentor Payout document
+			payout_doc = frappe.get_doc({
+				"doctype": "Mentor Payout",
+				"mentor": mentor,
+				"month_year": month_year_label,
+				"total_sessions": count,
+				"gross_amount": gross,
+				"commission_rate": rate * 100,          # stored as percent (e.g. 15)
+				"commission_amount": commission_amount,
+				"net_payout": net_payout,
+				"status": "Processing",
+			})
+			payout_doc.insert(ignore_permissions=True)
+			payout_name = payout_doc.name
+
+			# Stamp each booking row
+			for booking_name in session_names:
+				frappe.db.set_value(
+					"Mentor Session Booking",
+					booking_name,
+					{
+						"payout_status": "Processing",
+						"payout_reference": payout_name,
+					},
+					update_modified=False,
+				)
+
+			frappe.db.commit()
+
+		except Exception:
+			frappe.log_error(
+				title=f"Monthly Payout - Error for mentor {mentor}",
+				message=frappe.get_traceback(),
+			)
+			frappe.db.rollback()
+
+
+@frappe.whitelist(allow_guest=True)
+def get_mentor_dashboard_data(mentor_email):
+	if not mentor_email:
+		frappe.throw("mentor_email is required")
+
+	# ── helpers ──────────────────────────────────────────────────────────────
+	def _fmt(amount):
+		"""Format a numeric amount as ₹1,23,456 (Indian comma style)."""
+		try:
+			amount = float(amount or 0)
+		except (ValueError, TypeError):
+			amount = 0.0
+
+		# Split into integer and decimal parts
+		is_negative = amount < 0
+		amount = abs(amount)
+		int_part = int(amount)
+		dec_part = round((amount - int_part) * 100)
+
+		# Indian grouping: last 3 digits, then groups of 2
+		s = str(int_part)
+		if len(s) > 3:
+			last3 = s[-3:]
+			rest  = s[:-3]
+			groups = []
+			while rest:
+				groups.append(rest[-2:])
+				rest = rest[:-2]
+			s = ",".join(reversed(groups)) + "," + last3
+		formatted = f"₹{s}" if dec_part == 0 else f"₹{s}.{dec_part:02d}"
+		return f"-{formatted}" if is_negative else formatted
+
+	def _fmt_date(d):
+		"""Return 'Mon D, YYYY' string or 'TBD' if date is falsy."""
+		if not d:
+			return "TBD"
+		try:
+			from frappe.utils import getdate
+			dt = getdate(d)
+			return dt.strftime("%b %-d, %Y")
+		except Exception:
+			return "TBD"
+
+	# ── fetch all payout records for this mentor ──────────────────────────────
+	records = frappe.get_all(
+		"Mentor Payout",
+		filters={"mentor": mentor_email},
+		fields=[
+			"name", "month_year", "total_sessions",
+			"gross_amount", "commission_rate", "commission_amount",
+			"net_payout", "status", "payment_date"
+		],
+		order_by="creation desc",
+	)
+
+	# ── lifetime aggregates ───────────────────────────────────────────────────
+	lifetime_gross      = sum(float(r.gross_amount      or 0) for r in records)
+	lifetime_commission = sum(float(r.commission_amount or 0) for r in records)
+	lifetime_net        = sum(float(r.net_payout        or 0) for r in records)
+
+	# ── summary stats ─────────────────────────────────────────────────────────
+	pending_payout = sum(
+		float(r.net_payout or 0) for r in records if r.status == "Processing"
+	)
+
+	paid_records = [r for r in records if r.status == "Paid"]
+	last_paid    = float(paid_records[0].net_payout or 0) if paid_records else 0.0
+
+	# ── history array ─────────────────────────────────────────────────────────
+	history = []
+	for r in records:
+		gross      = float(r.gross_amount      or 0)
+		commission = float(r.commission_amount or 0)
+		net        = float(r.net_payout        or 0)
+		rate       = float(r.commission_rate   or 0)
+
+		history.append({
+			"month":      r.month_year,
+			"sessions":   int(r.total_sessions or 0),
+			"gross_raw":  gross,
+			"gross":      _fmt(gross),
+			"feePercent": f"{int(rate)}%",
+			"feeAmount":  _fmt(-commission),       # formatted as negative e.g. -₹3,240
+			"net_raw":    net,
+			"net":        _fmt(net),
+			"status":     r.status,
+			"date":       _fmt_date(r.payment_date),
+		})
+
+	return {
+		"lifetime": {
+			"gross":      _fmt(lifetime_gross),
+			"commission": _fmt(lifetime_commission),
+			"net":        _fmt(lifetime_net),
+		},
+		"summary": {
+			"pending_payout": _fmt(pending_payout),
+			"last_paid":      _fmt(last_paid),
+		},
+		"history": history,
+	}
+

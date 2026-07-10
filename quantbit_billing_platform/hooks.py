@@ -117,8 +117,15 @@ scheduler_events = {
 		"*/1 * * * *": [
 			"quantbit_billing_platform.quantbit_billing_platform.api.expire_billing_packages",
 			"quantbit_billing_platform.quantbit_billing_platform.api.send_notification_to_user",
-            "quantbit_billing_platform.quantbit_billing_platform.api.expire_token_on_date"
+            "quantbit_billing_platform.quantbit_billing_platform.api.expire_token_on_date",
+            "quantbit_billing_platform.quantbit_billing_platform.api.cleanup_abandoned_bookings",
+            "quantbit_billing_platform.quantbit_billing_platform.api.generate_monthly_payouts"
 		]
+		,
+		# Runs at 02:00 AM on the 1st of every month
+		# "0 2 1 * *": [
+		# 	"quantbit_billing_platform.quantbit_billing_platform.api.generate_monthly_payouts"
+		# ]
 	},
     "daily": [
         "quantbit_billing_platform.quantbit_billing_platform.doctype.billing_email_setting.billing_email_setting.run_date_based_emails",
