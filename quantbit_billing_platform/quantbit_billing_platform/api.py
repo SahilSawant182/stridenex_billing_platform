@@ -1721,6 +1721,35 @@ def get_mentor_dashboard_data(mentor_email):
 			"date":       _fmt_date(r.payment_date),
 		})
 
+	# ── Live Current Month (Unprocessed) ──────────────────────────────────────
+	from frappe.utils import today, get_first_day, get_last_day
+	current_date = today()
+	current_start = get_first_day(current_date)
+	current_end = get_last_day(current_date)
+
+	unprocessed_sessions = frappe.get_all(
+		"Mentor Session Booking",
+		filters={
+			"mentor": mentor_email,
+			"status": "Completed",
+			"payout_status": "Unpaid",
+			"session_date": ["between", [current_start, current_end]]
+		},
+		fields=["amount_paid"]
+	)
+
+	current_gross = sum(float(s.amount_paid or 0) for s in unprocessed_sessions)
+
+	# Estimate live net payout based on tiers
+	if current_gross <= 50000:
+		current_rate = 0.15
+	elif current_gross <= 100000:
+		current_rate = 0.12
+	else:
+		current_rate = 0.10
+
+	current_net = current_gross - (current_gross * current_rate)
+
 	return {
 		"lifetime": {
 			"gross":      _fmt(lifetime_gross),
@@ -1728,8 +1757,9 @@ def get_mentor_dashboard_data(mentor_email):
 			"net":        _fmt(lifetime_net),
 		},
 		"summary": {
-			"pending_payout": _fmt(pending_payout),
-			"last_paid":      _fmt(last_paid),
+			"pending_payout":     _fmt(pending_payout),
+			"last_paid":          _fmt(last_paid),
+			"current_month_live": _fmt(current_net)
 		},
 		"history": history,
 	}
