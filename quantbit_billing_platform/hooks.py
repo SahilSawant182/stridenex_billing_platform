@@ -129,7 +129,8 @@ scheduler_events = {
 	},
     "daily": [
         "quantbit_billing_platform.quantbit_billing_platform.doctype.billing_email_setting.billing_email_setting.run_date_based_emails",
-        "quantbit_billing_platform.quantbit_billing_platform.api.expire_subscription_history"
+        "quantbit_billing_platform.quantbit_billing_platform.api.expire_subscription_history",
+        "quantbit_billing_platform.quantbit_billing_platform.doctype.billing_email_setting.billing_email_setting.send_package_expiry_reminders"
     ]
 	# "daily": [
 	#     "quantbit_billing_platform.quantbit_billing_platform.api.send_notification_to_user",

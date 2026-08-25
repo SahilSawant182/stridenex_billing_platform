@@ -1,4 +1,5 @@
 import frappe
+from frappe import _
 import json
 import os
 from quantbit_billing_platform.utils import generate_random_id
@@ -496,7 +497,7 @@ def get_billing_packages_by_type(account_type):
 			"is_base_package": 0,
         "is_user_package": 0
         },
-        fields=["name", "package_name", "amount", "package_type", "no_of_days","app_name"],
+        fields=["name", "package_name", "amount", "package_type", "no_of_days", "app_name", "is_tax_inclusive"],
         order_by="amount asc"
     )
 
@@ -525,7 +526,8 @@ def get_billing_packages_by_type(account_type):
             "package_type": pkg.package_type,
             "no_of_days": pkg.no_of_days,
             "features": feature_list,
-			"app_name": pkg.app_name
+			"app_name": pkg.app_name,
+            "is_tax_inclusive": int(pkg.is_tax_inclusive or 0)
         }) 
 
     return {
@@ -970,14 +972,22 @@ def create_subscription_history(**kwargs):
     # operation so there is never more than one active subscription at a time.
     previously_active = frappe.get_all(
         "Subscription History",
-        filters={"customer_email": customer_email, "is_active": 1},
+        filters={
+            "customer_email": customer_email,
+            "is_active": 1,
+            "package_type": ["in", ["Day Based", "Token Based"]],
+        },
         pluck="name",
     )
 
     if previously_active:
         frappe.db.set_value(
             "Subscription History",
-            {"customer_email": customer_email, "is_active": 1},
+            {
+                "customer_email": customer_email,
+                "is_active": 1,
+                "package_type": ["in", ["Day Based", "Token Based"]],
+            },
             "is_active",
             0,
             update_modified=False,
@@ -1070,16 +1080,57 @@ _HISTORY_FIELDS = [
 
 def _get_current_running_package(email):
     """
-    Fetch the user's currently running package from Active Package Details.
+    Fetch the user's currently running package.
 
-    This covers base packages and user (free) packages that are assigned during
-    onboarding or as a fallback — they never appear in Subscription History.
+    Priority:
+    1. Subscription History with is_active=1 and payment_status=Paid
+       (the real paid plan the user is on right now — newest wins)
+    2. Active Package Details (base/free/onboarding package fallback)
 
-    Returns a clean dict or None if no record exists.
+    Returns a clean dict or None if nothing found.
     """
+    from frappe.utils import today, getdate
+
+    # ── Priority 1: active paid plan from Subscription History ──────────────
+    paid_active = frappe.get_all(
+        "Subscription History",
+        filters={
+            "customer_email": email,
+            "payment_status": "Paid",
+            "is_active": 1,
+            "package_type": ["in", ["Day Based", "Token Based"]],
+        },
+        fields=[
+            "name", "package_name", "package_type", "app_name",
+            "purchase_date", "expiry_date",
+            "amount", "currency", "sales_invoice_no",
+        ],
+        order_by="purchase_date desc, name desc",
+        limit=1,
+    )
+
+    if paid_active:
+        rec = paid_active[0]
+        return {
+            "billing_package":  rec.get("package_name"),
+            "package_name":     rec.get("package_name"),
+            "package_type":     rec.get("package_type"),
+            "app_name":         rec.get("app_name"),
+            "from_date":        str(rec["purchase_date"]) if rec.get("purchase_date") else None,
+            "to_date":          str(rec["expiry_date"])   if rec.get("expiry_date")   else None,
+            "package_id":       rec.get("name"),
+            "remaining_tokens": None,
+            "total_tokens":     None,
+            "amount":           float(rec.get("amount") or 0),
+            "currency":         rec.get("currency") or "INR",
+            "sales_invoice_no": rec.get("sales_invoice_no"),
+            "source":           "subscription_history",
+        }
+
+    # ── Priority 2: base/free package from Active Package Details ────────────
     pkg = frappe.db.get_value(
         "Active Package Details",
-        {"user": email},
+        {"user": email, "status": "Active"},
         [
             "name",
             "billing_package",
@@ -1095,6 +1146,25 @@ def _get_current_running_package(email):
     )
 
     if not pkg:
+        # Try without status filter as last resort
+        pkg = frappe.db.get_value(
+            "Active Package Details",
+            {"user": email},
+            [
+                "name",
+                "billing_package",
+                "app_name",
+                "package_type",
+                "from_date",
+                "to_date",
+                "package_id",
+                "remaining_tokens",
+                "total_tokens",
+            ],
+            as_dict=True,
+        )
+
+    if not pkg:
         return None
 
     # Resolve the human-readable package name from the Billing Package doctype.
@@ -1108,12 +1178,13 @@ def _get_current_running_package(email):
         "package_type":     pkg.package_type,
         "app_name":         pkg.app_name,
         "from_date":        str(pkg.from_date) if pkg.from_date else None,
-        "to_date":          str(pkg.to_date) if pkg.to_date else None,
+        "to_date":          str(pkg.to_date)   if pkg.to_date   else None,
         "package_id":       pkg.package_id,
         "remaining_tokens": pkg.remaining_tokens,
         "total_tokens":     pkg.total_tokens,
-        "source":           "active_package",   # lets the frontend know this is a free/base plan
+        "source":           "active_package",   # base/free plan from Active Package Details
     }
+
 
 
 def _build_empty_dashboard(current_plan=None):
@@ -1329,14 +1400,14 @@ def expire_subscription_history():
                 "run_date": str(today_date),
             },
         )
-
+  
     except Exception:
         frappe.log_error(
             title="Subscription Expiry Scheduler - Error",
             message=frappe.get_traceback(),
         )
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist(allow_guest=True) 
 def initiate_session_booking(payload):
 	if isinstance(payload, str):
 		data = json.loads(payload)
@@ -1362,7 +1433,7 @@ def initiate_session_booking(payload):
 		"offering_type": offering_type,
 		"session_date": session_date,
 		"from_time": from_time,
-		"to_time": to_time,
+		"to_time": to_time,  
 		"topic": topic,
 		"amount_paid": amount,
 		"status": "Payment Pending"
@@ -1383,34 +1454,24 @@ def initiate_session_booking(payload):
 			"booking_id": doc.name
 		}
 
-	# For amount > 0, generate Razorpay order
-	from payments.utils import get_payment_gateway_controller
+	# For amount > 0, generate Razorpay order remotely on UAT
 	try:
-		controller = get_payment_gateway_controller("Razorpay")
-		controller.init_client()
-	except Exception as e:
-		frappe.delete_doc("Mentor Session Booking", doc.name, ignore_permissions=True, force=True)
-		frappe.db.commit()
-		frappe.throw(_("Payment gateway configuration error: {0}").format(str(e)))
-
-	try:
-		amount_in_paise = int(amount * 100)
-		order_payload = {
-			"amount": amount_in_paise,
-			"currency": "INR",
+		from stridenex_app.api_stridenex_app.uat_client import call_uat_api
+		res_order = call_uat_api("quantbit_payments_platform.api.uat_create_razorpay_order", {
+			"amount": amount,
 			"receipt": doc.name
-		}
-		order = controller.client.order.create(data=order_payload)
-		order_id = order.get("id")
+		})
+		order_id = res_order.get("order_id")
+		api_key = res_order.get("api_key")
 	except Exception as e:
 		frappe.delete_doc("Mentor Session Booking", doc.name, ignore_permissions=True, force=True)
 		frappe.db.commit()
-		frappe.throw(_("Razorpay order creation failed: {0}").format(str(e)))
+		frappe.throw(_("Razorpay order creation failed remotely on UAT: {0}").format(str(e)))
 
 	return {
 		"payment_required": True,
 		"order_id": order_id,
-		"api_key": controller.api_key,
+		"api_key": api_key,
 		"amount": amount,
 		"booking_id": doc.name
 	}
@@ -1418,19 +1479,16 @@ def initiate_session_booking(payload):
 
 @frappe.whitelist(allow_guest=True)
 def verify_session_payment(booking_id, razorpay_payment_id, razorpay_order_id, razorpay_signature):
-	from payments.utils import get_payment_gateway_controller
 	try:
-		controller = get_payment_gateway_controller("Razorpay")
-		controller.init_client()
-	except Exception as e:
-		frappe.throw(_("Payment gateway configuration error: {0}").format(str(e)))
-
-	try:
-		controller.client.utility.verify_payment_signature({
+		from stridenex_app.api_stridenex_app.uat_client import call_uat_api
+		verify_res = call_uat_api("quantbit_payments_platform.api.uat_verify_razorpay_signature", {
 			"razorpay_order_id": razorpay_order_id,
 			"razorpay_payment_id": razorpay_payment_id,
 			"razorpay_signature": razorpay_signature
 		})
+		if not verify_res or verify_res.get("status") != "success":
+			err_msg = verify_res.get("error") if verify_res else "Signature verification failed"
+			frappe.throw(_("Payment verification failed remotely: {0}").format(err_msg))
 	except Exception as e:
 		frappe.throw(_("Payment verification failed: Signature mismatch or invalid payment. {0}").format(str(e)))
 
@@ -1445,6 +1503,13 @@ def verify_session_payment(booking_id, razorpay_payment_id, razorpay_order_id, r
 	doc.status = "Pending"
 	doc.payment_reference = razorpay_payment_id
 	doc.save(ignore_permissions=True)
+
+	# Create paid Sales Invoice (non-blocking to student flow)
+	try:
+		from stridenex_app.stridenex_app.doctype.mentor_payout_sheet.mentor_payout_sheet import create_paid_sales_invoice_for_booking
+		create_paid_sales_invoice_for_booking(doc, razorpay_payment_id)
+	except Exception:
+		frappe.log_error(title="Failed to generate Sales Invoice for booking", message=frappe.get_traceback())
 
 	# Create Subscription History for paid session (non-blocking)
 	_create_session_subscription_history(doc, razorpay_payment_id=razorpay_payment_id)
@@ -1504,7 +1569,7 @@ def cleanup_abandoned_bookings():
 
 	cutoff_time = now_datetime() - timedelta(minutes=15)
 
-	abandoned_bookings = frappe.get_all(
+	abandoned_bookings = frappe.get_all(      
 		"Mentor Session Booking",
 		filters={
 			"status": "Payment Pending",
@@ -1521,115 +1586,170 @@ def cleanup_abandoned_bookings():
 			frappe.log_error(f"Failed to delete abandoned booking {booking}: {str(e)}", "Cleanup Abandoned Bookings")
 
 
+def get_next_period(last_payout_date, cycle):
+	# last_payout_date is the end date of the last processed period.
+	# Returns (start_date, end_date) for the next period.
+	from frappe.utils import add_days, getdate
+	import calendar
+
+	start_date = add_days(last_payout_date, 1)
+
+	if cycle == "Weekly":
+		end_date = add_days(last_payout_date, 7)
+	elif cycle == "10 Days":
+		end_date = add_days(last_payout_date, 10)
+	elif cycle == "15 Days":
+		end_date = add_days(last_payout_date, 15)
+	elif cycle == "20 Days":
+		end_date = add_days(last_payout_date, 20)
+	elif cycle == "Monthly":
+		# Calendar month: next month's last day
+		year = start_date.year
+		month = start_date.month
+		last_day = calendar.monthrange(year, month)[1]
+		end_date = start_date.replace(day=last_day)
+	else:
+		# default/fallback to 30 days
+		end_date = add_days(last_payout_date, 30)
+
+	return start_date, end_date
+
+
 def generate_monthly_payouts():
 	"""
-	Scheduled task: runs on the 1st of every month (configured in hooks.py).
-
-	For each mentor who has Completed + Unpaid bookings in the previous calendar
-	month, it:
-	  1. Aggregates gross amount and session count.
-	  2. Applies a tiered commission rate.
-	  3. Creates a Mentor Payout document (status = "Processing").
-	  4. Stamps all processed bookings with payout_status = "Processing" and
-	     a back-link to the new payout document.
-
-	Each mentor is committed separately so one failure does NOT roll back others.
+	Scheduled task: runs on */1 * * * * (every minute).
+	Now fully configurable via Mentor Payout Settings.
 	"""
+	from frappe.utils import getdate, today, add_days
 	import calendar
-	from frappe.utils import getdate, today
 
+	# 1. Initialize Mentor Payout Settings if it doesn't exist or is not initialized
+	settings = frappe.get_single("Mentor Payout Settings")
+	if not settings.last_payout_date:
+		settings.payout_cycle = "Monthly"
+		settings.last_payout_date = "2026-06-30"  # matching the last month (June 2026)
+		settings.set("commission_tiers", [])
+		settings.append("commission_tiers", {"threshold": 0.0, "commission_rate": 15.0})
+		settings.append("commission_tiers", {"threshold": 50000.0, "commission_rate": 12.0})
+		settings.append("commission_tiers", {"threshold": 100000.0, "commission_rate": 10.0})
+		settings.save(ignore_permissions=True)
+		frappe.db.commit()
+		settings = frappe.get_single("Mentor Payout Settings")
+
+	cycle = settings.payout_cycle or "Monthly"
+	last_payout_date = getdate(settings.last_payout_date or "2026-06-30")
 	today_date = getdate(today())
 
-	# Guard: only run on the 1st of the month
-	if today_date.day != 1:
-		return
+	# Retrieve commission tiers
+	tiers = []
+	for tier in settings.get("commission_tiers") or []:
+		tiers.append({
+			"threshold": float(tier.threshold or 0),
+			"rate": float(tier.commission_rate or 0) / 100.0
+		})
 
-	# Determine the previous month's date range
-	first_of_this_month = today_date.replace(day=1)
-	last_of_prev_month = first_of_this_month - timedelta(days=1)
-	first_of_prev_month = last_of_prev_month.replace(day=1)
+	if not tiers:
+		tiers = [
+			{"threshold": 0.0, "rate": 0.15},
+			{"threshold": 50000.0, "rate": 0.12},
+			{"threshold": 100000.0, "rate": 0.10}
+		]
 
-	month_year_label = last_of_prev_month.strftime("%B %Y")   # e.g. "February 2025"
+	# Sort tiers by threshold ascending
+	tiers = sorted(tiers, key=lambda x: x["threshold"])
 
-	# Fetch all completed + unpaid bookings in the previous month
-	bookings = frappe.get_all(
-		"Mentor Session Booking",
-		filters={
-			"status": "Completed",
-			"payout_status": "Unpaid",
-			"session_date": ["between", [str(first_of_prev_month), str(last_of_prev_month)]]
-		},
-		fields=["name", "mentor", "amount_paid"],
-	)
+	# Process any fully completed periods
+	while True:
+		start_date, end_date = get_next_period(last_payout_date, cycle)
+		if today_date <= end_date:
+			# Current period has not completed yet
+			break
 
-	if not bookings:
-		return
+		if cycle == "Monthly":
+			month_year_label = end_date.strftime("%B %Y")
+		else:
+			month_year_label = f"{start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}"
 
-	# Group by mentor
-	mentor_map = {}
-	for b in bookings:
-		mentor = b.mentor
-		if not mentor:
-			continue
-		if mentor not in mentor_map:
-			mentor_map[mentor] = {"sessions": [], "gross": 0.0, "count": 0}
-		mentor_map[mentor]["sessions"].append(b.name)
-		mentor_map[mentor]["gross"] += float(b.amount_paid or 0)
-		mentor_map[mentor]["count"] += 1
+		# Fetch completed + unpaid bookings in this period
+		bookings = frappe.get_all(
+			"Mentor Session Booking",
+			filters={
+				"status": "Completed",
+				"payout_status": "Unpaid",
+				"session_date": ["between", [str(start_date), str(end_date)]]
+			},
+			fields=["name", "mentor", "amount_paid"],
+		)
 
-	# Process each mentor independently
-	for mentor, data in mentor_map.items():
-		try:
-			gross = data["gross"]
-			count = data["count"]
-			session_names = data["sessions"]
+		if bookings:
+			# Group by mentor
+			mentor_map = {}
+			for b in bookings:
+				mentor = b.mentor
+				if not mentor:
+					continue
+				if mentor not in mentor_map:
+					mentor_map[mentor] = {"sessions": [], "gross": 0.0, "count": 0}
+				mentor_map[mentor]["sessions"].append(b.name)
+				mentor_map[mentor]["gross"] += float(b.amount_paid or 0)
+				mentor_map[mentor]["count"] += 1
 
-			# Tiered commission rate
-			if gross <= 50000:
-				rate = 0.15
-			elif gross <= 100000:
-				rate = 0.12
-			else:
-				rate = 0.10
+			# Process each mentor independently
+			for mentor, data in mentor_map.items():
+				try:
+					gross = data["gross"]
+					count = data["count"]
+					session_names = data["sessions"]
 
-			commission_amount = round(gross * rate, 2)
-			net_payout = round(gross - commission_amount, 2)
+					# Determine rate based on tiers
+					rate = 0.15
+					for tier in tiers:
+						if gross >= tier["threshold"]:
+							rate = tier["rate"]
 
-			# Create Mentor Payout document
-			payout_doc = frappe.get_doc({
-				"doctype": "Mentor Payout",
-				"mentor": mentor,
-				"month_year": month_year_label,
-				"total_sessions": count,
-				"gross_amount": gross,
-				"commission_rate": rate * 100,          # stored as percent (e.g. 15)
-				"commission_amount": commission_amount,
-				"net_payout": net_payout,
-				"status": "Processing",
-			})
-			payout_doc.insert(ignore_permissions=True)
-			payout_name = payout_doc.name
+					commission_amount = round(gross * rate, 2)
+					net_payout = round(gross - commission_amount, 2)
 
-			# Stamp each booking row
-			for booking_name in session_names:
-				frappe.db.set_value(
-					"Mentor Session Booking",
-					booking_name,
-					{
-						"payout_status": "Processing",
-						"payout_reference": payout_name,
-					},
-					update_modified=False,
-				)
+					# Create Mentor Payout document
+					payout_doc = frappe.get_doc({
+						"doctype": "Mentor Payout",
+						"mentor": mentor,
+						"month_year": month_year_label,
+						"total_sessions": count,
+						"gross_amount": gross,
+						"commission_rate": rate * 100,          # stored as percent (e.g. 15)
+						"commission_amount": commission_amount,
+						"net_payout": net_payout,
+						"status": "Processing",
+					})
+					payout_doc.insert(ignore_permissions=True)
+					payout_name = payout_doc.name
 
-			frappe.db.commit()
+					# Stamp each booking row
+					for booking_name in session_names:
+						frappe.db.set_value(
+							"Mentor Session Booking",
+							booking_name,
+							{
+								"payout_status": "Processing",
+								"payout_reference": payout_name,
+							},
+							update_modified=False,
+						)
 
-		except Exception:
-			frappe.log_error(
-				title=f"Monthly Payout - Error for mentor {mentor}",
-				message=frappe.get_traceback(),
-			)
-			frappe.db.rollback()
+					frappe.db.commit()
+
+				except Exception:
+					frappe.log_error(
+						title=f"Payout - Error for mentor {mentor} in period {month_year_label}",
+						message=frappe.get_traceback(),
+					)
+					frappe.db.rollback()
+
+		# Update last_payout_date and commit progress for this period
+		last_payout_date = end_date
+		frappe.db.set_value("Mentor Payout Settings", "Mentor Payout Settings", "last_payout_date", last_payout_date)
+		frappe.db.commit()
 
 
 @frappe.whitelist(allow_guest=True)
@@ -1721,11 +1841,18 @@ def get_mentor_dashboard_data(mentor_email):
 			"date":       _fmt_date(r.payment_date),
 		})
 
-	# ── Live Current Month (Unprocessed) ──────────────────────────────────────
-	from frappe.utils import today, get_first_day, get_last_day
-	current_date = today()
-	current_start = get_first_day(current_date)
-	current_end = get_last_day(current_date)
+	# ── Live Current Period (Unprocessed) ──────────────────────────────────────
+	from frappe.utils import today, get_first_day, get_last_day, getdate
+
+	try:
+		settings = frappe.get_single("Mentor Payout Settings")
+		cycle = settings.payout_cycle or "Monthly"
+		last_payout_date = getdate(settings.last_payout_date or "2026-06-30")
+		current_start, current_end = get_next_period(last_payout_date, cycle)
+	except Exception:
+		current_date = today()
+		current_start = get_first_day(current_date)
+		current_end = get_last_day(current_date)
 
 	unprocessed_sessions = frappe.get_all(
 		"Mentor Session Booking",
@@ -1733,7 +1860,7 @@ def get_mentor_dashboard_data(mentor_email):
 			"mentor": mentor_email,
 			"status": "Completed",
 			"payout_status": "Unpaid",
-			"session_date": ["between", [current_start, current_end]]
+			"session_date": ["between", [str(current_start), str(current_end)]]
 		},
 		fields=["amount_paid"]
 	)
@@ -1741,14 +1868,33 @@ def get_mentor_dashboard_data(mentor_email):
 	current_gross = sum(float(s.amount_paid or 0) for s in unprocessed_sessions)
 
 	# Estimate live net payout based on tiers
-	if current_gross <= 50000:
-		current_rate = 0.15
-	elif current_gross <= 100000:
-		current_rate = 0.12
-	else:
-		current_rate = 0.10
+	try:
+		tiers = []
+		for tier in settings.get("commission_tiers") or []:
+			tiers.append({
+				"threshold": float(tier.threshold or 0),
+				"rate": float(tier.commission_rate or 0) / 100.0
+			})
+		if not tiers:
+			tiers = [
+				{"threshold": 0.0, "rate": 0.15},
+				{"threshold": 50000.0, "rate": 0.12},
+				{"threshold": 100000.0, "rate": 0.10}
+			]
+		tiers = sorted(tiers, key=lambda x: x["threshold"])
+	except Exception:
+		tiers = [
+			{"threshold": 0.0, "rate": 0.15},
+			{"threshold": 50000.0, "rate": 0.12},
+			{"threshold": 100000.0, "rate": 0.10}
+		]
 
-	current_net = current_gross - (current_gross * current_rate)
+	current_rate = 0.15
+	for tier in tiers:
+		if current_gross >= tier["threshold"]:
+			current_rate = tier["rate"]
+
+	current_net = current_gross - (current_gross * current_rate)  
 
 	return {
 		"lifetime": {

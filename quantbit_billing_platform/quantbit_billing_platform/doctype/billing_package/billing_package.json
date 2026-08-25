@@ -24,6 +24,7 @@
   "package_type",
   "is_base_package",
   "is_user_package",
+  "is_tax_inclusive",
   "section_break_xjga",
   "table_flci",
   "section_break_mdir",
@@ -150,6 +151,13 @@
    "fieldtype": "Check",
    "in_list_view": 1,
    "label": "Is User Package"
+  },
+  {
+   "default": "1",
+   "fieldname": "is_tax_inclusive",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Is Tax Inclusive"
   },
   {
    "fieldname": "app",

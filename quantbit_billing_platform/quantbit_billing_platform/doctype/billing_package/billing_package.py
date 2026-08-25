@@ -17,8 +17,8 @@ class BillingPackage(Document):
         if frappe.flags.in_migrate or frappe.flags.in_import:
             return
 
-        if not self.is_new() and self.is_user_package:
-            frappe.throw("User package cannot be updated.")
+        # if not self.is_new() and self.is_user_package:
+        #     frappe.throw("User package cannot be updated.")
         
         if not self.target_account_type:
             frappe.throw("Target Account Type is required.")

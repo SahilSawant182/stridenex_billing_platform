@@ -232,3 +232,86 @@ def run_date_based_emails():
 
 class BillingEmailSetting(Document):
 	pass
+
+
+
+# apps/quantbit_billing_platform/quantbit_billing_platform/tasks.py
+
+import frappe
+from frappe.utils import today, add_days, getdate, cint
+
+def send_package_expiry_reminders():
+    """
+    Daily scheduled job.
+    Checks Active Package Details for records where to_date is
+    5, 3, 2, or 1 day(s) from today and sends a reminder email.
+    """
+    reminder_days = [5, 3, 2, 1]
+    current_date = getdate(today())
+
+    for days in reminder_days:
+        target_date = add_days(current_date, days)
+
+        packages = frappe.get_all(
+            "Active Package Details",
+            filters={
+                "to_date": target_date
+            },
+            fields=[
+                "name", "user", "app_name", "billing_package",
+                "package_type", "to_date", "remaining_tokens",
+                "total_tokens", "no_of_days"
+            ]
+        )
+
+        for pkg in packages:
+            send_reminder_email(pkg, days)
+
+
+def send_reminder_email(pkg, days_remaining):
+    user_email = pkg.get("user")
+    if not user_email:
+        return
+
+    # Avoid duplicate sends if job runs more than once a day
+    flag_field = f"reminder_sent_{days_remaining}"
+    already_sent = frappe.db.get_value(
+        "Active Package Details", pkg["name"], flag_field
+    ) if frappe.db.has_column("Active Package Details", flag_field) else None
+
+    if already_sent:
+        return
+
+    subject = f"Your {pkg.get('app_name') or 'Subscription'} plan expires in {days_remaining} day(s)"
+
+    message = f"""
+        <p>Dear User,</p>
+        <p>Your subscription package <b>{pkg.get('billing_package')}</b>
+        ({pkg.get('package_type')}) for <b>{pkg.get('app_name')}</b>
+        is expiring on <b>{frappe.utils.formatdate(pkg.get('to_date'))}</b>
+        ({days_remaining} day(s) remaining).</p>
+        <p>Remaining Tokens: <b>{pkg.get('remaining_tokens')}</b> / {pkg.get('total_tokens')}</p>
+        <p>Please renew or upgrade your plan to continue uninterrupted access.</p>
+        <p><a href="{frappe.utils.get_url()}/app/active-package-details/{pkg.get('name')}">
+        Click here to renew/upgrade</a></p>
+        <p>Regards,<br>Team</p>
+    """
+
+    try:
+        frappe.sendmail(
+            recipients=[user_email],
+            subject=subject,
+            message=message,
+            reference_doctype="Active Package Details",
+            reference_name=pkg.get("name"),
+        )
+        frappe.logger().info(f"Reminder email sent to {user_email} for {pkg.get('name')} ({days_remaining} days left)")
+
+        if frappe.db.has_column("Active Package Details", flag_field := f"reminder_sent_{days_remaining}"):
+            frappe.db.set_value("Active Package Details", pkg["name"], flag_field, 1)
+
+    except Exception:
+        frappe.log_error(
+            frappe.get_traceback(),
+            f"Failed to send package expiry reminder for {pkg.get('name')}"
+        )

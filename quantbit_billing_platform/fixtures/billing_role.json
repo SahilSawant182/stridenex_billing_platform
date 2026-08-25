@@ -4,10 +4,7 @@
   "billing_role": "User Role",
   "billing_role_list": [
    {
-    "billing_role": "User Role",
-    "parent": "User Role",
-    "parentfield": "billing_role_list",
-    "parenttype": "Billing Role"
+    "billing_role": "User Role"
    }
   ],
   "desk_access": 1,
