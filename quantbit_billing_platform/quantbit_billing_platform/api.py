@@ -1670,81 +1670,36 @@ def generate_monthly_payouts():
 		else:
 			month_year_label = f"{start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}"
 
-		# Fetch completed + unpaid bookings in this period
-		bookings = frappe.get_all(
+		# Check if there are any unpaid bookings for this period
+		bookings_exist = frappe.db.exists(
 			"Mentor Session Booking",
-			filters={
-				"status": "Completed",
+			{
 				"payout_status": "Unpaid",
 				"session_date": ["between", [str(start_date), str(end_date)]]
-			},
-			fields=["name", "mentor", "amount_paid"],
+			}
 		)
 
-		if bookings:
-			# Group by mentor
-			mentor_map = {}
-			for b in bookings:
-				mentor = b.mentor
-				if not mentor:
-					continue
-				if mentor not in mentor_map:
-					mentor_map[mentor] = {"sessions": [], "gross": 0.0, "count": 0}
-				mentor_map[mentor]["sessions"].append(b.name)
-				mentor_map[mentor]["gross"] += float(b.amount_paid or 0)
-				mentor_map[mentor]["count"] += 1
+		if bookings_exist:
+			try:
+				# Create the new comprehensive Mentor Payout Sheet
+				sheet = frappe.get_doc({
+					"doctype": "Mentor Payout Sheet",
+					"payout_cycle": cycle,
+					"start_date": start_date,
+					"end_date": end_date
+				})
+				
+				# The validate() method inside Mentor Payout Sheet automatically
+				# populates the mentors, sessions, penalties, and summary tables.
+				sheet.insert(ignore_permissions=True)
+				frappe.db.commit()
 
-			# Process each mentor independently
-			for mentor, data in mentor_map.items():
-				try:
-					gross = data["gross"]
-					count = data["count"]
-					session_names = data["sessions"]
-
-					# Determine rate based on tiers
-					rate = 0.15
-					for tier in tiers:
-						if gross >= tier["threshold"]:
-							rate = tier["rate"]
-
-					commission_amount = round(gross * rate, 2)
-					net_payout = round(gross - commission_amount, 2)
-
-					# Create Mentor Payout document
-					payout_doc = frappe.get_doc({
-						"doctype": "Mentor Payout",
-						"mentor": mentor,
-						"month_year": month_year_label,
-						"total_sessions": count,
-						"gross_amount": gross,
-						"commission_rate": rate * 100,          # stored as percent (e.g. 15)
-						"commission_amount": commission_amount,
-						"net_payout": net_payout,
-						"status": "Processing",
-					})
-					payout_doc.insert(ignore_permissions=True)
-					payout_name = payout_doc.name
-
-					# Stamp each booking row
-					for booking_name in session_names:
-						frappe.db.set_value(
-							"Mentor Session Booking",
-							booking_name,
-							{
-								"payout_status": "Processing",
-								"payout_reference": payout_name,
-							},
-							update_modified=False,
-						)
-
-					frappe.db.commit()
-
-				except Exception:
-					frappe.log_error(
-						title=f"Payout - Error for mentor {mentor} in period {month_year_label}",
-						message=frappe.get_traceback(),
-					)
-					frappe.db.rollback()
+			except Exception:
+				frappe.log_error(
+					title=f"Payout Sheet Generation Error for period {month_year_label}",
+					message=frappe.get_traceback(),
+				)
+				frappe.db.rollback()
 
 		# Update last_payout_date and commit progress for this period
 		last_payout_date = end_date
@@ -1796,16 +1751,29 @@ def get_mentor_dashboard_data(mentor_email):
 			return "TBD"
 
 	# ── fetch all payout records for this mentor ──────────────────────────────
-	records = frappe.get_all(
-		"Mentor Payout",
-		filters={"mentor": mentor_email},
-		fields=[
-			"name", "month_year", "total_sessions",
-			"gross_amount", "commission_rate", "commission_amount",
-			"net_payout", "status", "payment_date"
-		],
-		order_by="creation desc",
-	)
+	# Now using the comprehensive Mentor Payout Sheet architecture
+	records = frappe.db.sql("""
+		SELECT 
+			child.name,
+			child.total_sessions,
+			child.gross_amount,
+			child.commission_rate,
+			child.commission_amount,
+			child.net_payout,
+			parent.end_date as payment_date,
+			CASE WHEN parent.docstatus = 1 THEN 'Paid' ELSE 'Processing' END as status
+		FROM `tabMentor Payout Sheet Row` child
+		JOIN `tabMentor Payout Sheet` parent ON child.parent = parent.name
+		WHERE child.mentor = %s AND child.released = 1
+		ORDER BY parent.end_date DESC
+	""", (mentor_email,), as_dict=True)
+
+	for r in records:
+		if r.payment_date:
+			from frappe.utils import getdate
+			r.month_year = getdate(r.payment_date).strftime("%B %Y")
+		else:
+			r.month_year = "TBD"
 
 	# ── lifetime aggregates ───────────────────────────────────────────────────
 	lifetime_gross      = sum(float(r.gross_amount      or 0) for r in records)
